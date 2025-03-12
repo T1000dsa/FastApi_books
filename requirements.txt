@@ -1,0 +1,8 @@
+fastapi
+pydantic
+pydantic-settings
+uvicorn
+aiohttp
+sqlalchemy
+asyncpg
+psycopg2

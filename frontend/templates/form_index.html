@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{ title|default:'without title'|capfirst }}</title>
+    <meta charset="utf-8" />
+</head>
+<body>
+    <h2>Book</h2>
+    <form action="postdata" method="post">
+        <p>
+            Title:<br>
+            <input name="title" />
+        </p>
+        <p>
+            Author:<br>
+            <input name="author" />
+        </p>
+        <p>
+            Slug:<br>
+            <input name="slug" />
+        </p>
+        <p>
+            Text_hook:<br>
+            <input name="text_hook" type="file" />
+        </p>
+        <input type="submit" value="Send" />
+    </form>
+</body>
+</html>

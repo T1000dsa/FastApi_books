@@ -7,11 +7,14 @@ class BookModelPydantic(BaseModel):
     slug:str
     #count:Mapped[int]
     #price:Mapped[int|None]
-    created_at:datetime
-    updated_at:datetime
     text_hook:str|None
+
+    tags:list[int]
 
 class TagsModelPydantic(BaseModel):
     slug:str
     tag:str
+
+    books:list[int]
+
 

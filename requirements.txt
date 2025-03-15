@@ -6,3 +6,4 @@ aiohttp
 sqlalchemy
 asyncpg
 psycopg2
+python-multipart

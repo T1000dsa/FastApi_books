@@ -1,7 +1,7 @@
 # venv/Scripts/activate | deactivate; venv -> 1 | 0
 # pip install -U aiogram; -U when venv: 1 | -U if venv == True
 # git add <file> | git add .
-# git commit -m "description" current vers. 002
+# git commit -m "description" current vers. 003
 # git push origin main
 # python3 -m venv venv
 # venv/Scripts/activate.bat

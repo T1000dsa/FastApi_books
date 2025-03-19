@@ -9,10 +9,9 @@ class BookModelPydantic(BaseModel):
     #price:Mapped[int|None]
     text_hook:str|None
 
-    tags:list[int]
+    tags:list[int]|None
 
 class TagsModelPydantic(BaseModel):
-    slug:str
     tag:str
 
     books:list[int]

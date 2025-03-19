@@ -20,7 +20,7 @@ async def create_data():
         # Use run_sync to execute the synchronous create_all method
         await conn.run_sync(Base.metadata.create_all)
 
-async def insert_data(data=None):
+async def insert_data(data:TagsModelPydantic|BookModelPydantic=None):
     async with async_session_maker() as session:
 
         if type(data) == BookModelPydantic:
@@ -41,41 +41,59 @@ async def insert_data(data=None):
             stm = select(BookModelOrm).where(BookModelOrm.id.in_(res.books))
             tag_objs = await session.execute(stm)
             session.add(TagsModelOrm(
-                slug=res.slug, 
                 tag=res.tag,
                 book_tags=tag_objs.scalars().all()
                 ))
             await session.commit()
 
 
-async def update_data(id_data: int, data: BookModelPydantic):
+async def update_data(id_data: int, data: BookModelPydantic|TagsModelPydantic):
     async with async_session_maker() as session:
         try:
             # Validate the input data
-            res = BookModelPydantic.model_validate(data, from_attributes=True)
+            if type(data) == BookModelPydantic:
+                res = BookModelPydantic.model_validate(data, from_attributes=True)
+                
+                # Fetch the tags from the database based on the tag IDs in the input data
+                tag_objs = (await session.execute(select(TagsModelOrm).where(TagsModelOrm.id.in_(res.tags)))).scalars().all()
+                
+                # Fetch the book to be updated, eagerly loading the tag_books relationship
+                book = (await session.execute(select(BookModelOrm).where(BookModelOrm.id == id_data)
+                        .options(selectinload(BookModelOrm.tag_books))) # Eagerly load the relationship
+                ).scalar_one()
+                
+                # Clear existing tags and apply new tags
+                book.tag_books.clear()  # Remove existing tags
+                book.tag_books.extend(tag_objs)  # Add new tags
+                
+                # Add the book to the session (if not already tracked)
+                session.add(book)
+                
+                # Commit the changes to the database
+                await session.commit()
+                
+                # Refresh the book instance to reflect the changes
+                await session.refresh(book)
+                
+                return book
             
-            # Fetch the tags from the database based on the tag IDs in the input data
-            tag_objs = (await session.execute(select(TagsModelOrm).where(TagsModelOrm.id.in_(res.tags)))).scalars().all()
-            
-            # Fetch the book to be updated, eagerly loading the tag_books relationship
-            book = (await session.execute(select(BookModelOrm).where(BookModelOrm.id == id_data)
-                    .options(selectinload(BookModelOrm.tag_books))) # Eagerly load the relationship
-            ).scalar_one()
-            
-            # Clear existing tags and apply new tags
-            book.tag_books.clear()  # Remove existing tags
-            book.tag_books.extend(tag_objs)  # Add new tags
-            
-            # Add the book to the session (if not already tracked)
-            session.add(book)
-            
-            # Commit the changes to the database
-            await session.commit()
-            
-            # Refresh the book instance to reflect the changes
-            await session.refresh(book)
-            
-            return book
+            elif type(data) == TagsModelPydantic:
+                res = TagsModelPydantic.model_validate(data, from_attributes=True)
+                book_objs = (await session.execute(select(BookModelOrm).where(BookModelOrm.id.in_(res.books)))).scalars().all()
+                tag = (await session.execute(select(TagsModelOrm).where(TagsModelOrm.id == id_data)
+                        .options(selectinload(TagsModelOrm.book_tags)))
+                ).scalar_one()
+                
+
+                tag.book_tags.clear()  # Remove existing books
+                tag.book_tags.extend(book_objs)  # Add new books
+                
+                session.add(tag)
+                await session.commit()
+                await session.refresh(tag)
+                
+                return tag
+
         except SQLAlchemyError as e:
             await session.rollback()
             logger.error(f"Error updating book: {e}")

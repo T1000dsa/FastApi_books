@@ -2,7 +2,7 @@ from src.database_data.database import Base, int_pk, created_at, updated_at, str
 from datetime import datetime 
 from sqlalchemy.orm import Mapped, mapped_column, relationship, joinedload
 from sqlalchemy import ForeignKey
-from typing import List
+import slugify
 
 class BookModelOrm(Base):
     __tablename__ = 'books'
@@ -30,14 +30,21 @@ class TagsModelOrm(Base):
     __tablename__ = 'tags'
 
     id:Mapped[int_pk]
-    slug:Mapped[str_uniq]
-    tag:Mapped[str]
+    slug:Mapped[str]
+    tag:Mapped[str_uniq]
 
     book_tags:Mapped[list['BookModelOrm']] = relationship(
         'BookModelOrm',
         back_populates="tag_books", 
         secondary="tagsinbooks",
         )
+    
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.slug = slugify.slugify(self.tag) # Generate slug when title is set
+    def __str__(self):
+        return self.tag
+    
     
 
 class TagsOnBookOrm(Base):

@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+<title>{{ title }}</title>
+{% block content %}
+<h1>{{ title }}</h1>
+        <!-- templates/booK_form_index.html -->
+    <form action="/action/insert/book/form" method="post" enctype="multipart/form-data">
+        <label for="title">Title:</label>
+        <input type="text" id="title" name="title" required><br><br>
+
+        <label for="author">Author:</label>
+        <input type="text" id="author" name="author" required><br><br>
+
+        <label for="slug">Slug:</label>
+        <input type="text" id="slug" name="slug" required><br><br>
+
+        <label for="text_hook">Text Hook (File):</label>
+        <input type="file" id="text_hook" name="text_hook" required><br><br>
+
+        <label for="tags_book">Tags (comma-separated):</label><br>
+        {% for item in tags %}
+            <button type="button" onclick="addTag('{{ item }}')">{{ item }}</button><br>
+        {% endfor %}
+
+    <script>
+        // Function to add a tag to the input field
+        function addTag(tag) {
+            const input = document.getElementById('tags_book');
+            if (input.value === "") {
+                input.value = tag;
+            } else {
+                input.value += `, ${tag}`;
+            }
+        }
+    </script>
+    <button type="submit">Submit</button>
+    </form>
+{% endblock %}

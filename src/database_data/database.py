@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Annotated
 
-from sqlalchemy import func, engine, create_engine
+from sqlalchemy import func, create_engine
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
 from sqlalchemy.orm import DeclarativeBase, mapped_column, sessionmaker
 from src.database_data.settings import get_db_url_async

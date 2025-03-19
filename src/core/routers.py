@@ -1,10 +1,12 @@
 from fastapi.responses import FileResponse
 from fastapi import APIRouter, Request, HTTPException
 from fastapi.responses import HTMLResponse
-from src.database_data.db_orm import create_data, drop_object, insert_data, update_data, output_data
-from ..init_data.models import BookModelPydantic, TagsModelPydantic
+from src.database_data.db_orm import create_data, drop_object, insert_data, update_data, output_data, select_data_book
+from src.init_data.models import BookModelPydantic, TagsModelPydantic
 from fastapi.templating import Jinja2Templates
 from src.database_data.models import BookModelOrm, TagsModelOrm
+from src.core.services import TextLoad
+
 import asyncio
 from fastapi import UploadFile, File, Form
 import logging
@@ -15,10 +17,11 @@ from datetime import datetime
 router = APIRouter()
 
 menu = [
+    {'title':'Docs', 'url':'/docs'},
     {'title':'Home', 'url':'/'},
     {'title':'Add Book', 'url':'/add_book'},
     {'title':'Add Tag', 'url':'/add_tag'},
-    {'title':'Docs', 'url':'/docs'},
+    {'title':'Get Books', 'url':'/books'},
 ]
 
 logger = logging.getLogger(__name__)
@@ -59,6 +62,11 @@ async def insert_db_data_book(model:BookModelPydantic):
     await insert_data(model)
     return {'msg':'Data was inserted'}
 
+@router.get('/action/select/book', tags=['books'])
+async def select_db_data_book(data_id):
+    result = await select_data_book(data=data_id)
+    return {'msg':'Data was inserted', 'data':result}
+
 @router.post('/action/insert/tag', tags=['tags'])
 async def insert_db_data_tag(model:TagsModelPydantic):
     await insert_data(model)
@@ -93,7 +101,6 @@ async def update_db_data_tag(model:TagsModelPydantic, id:int=None):
 async def postdata_book(request:Request,
         title=Form(), 
         author=Form(),
-        slug=Form(),
         text_hook:UploadFile=File(),
         tags_book=Form(default='')
         ):
@@ -112,15 +119,14 @@ async def postdata_book(request:Request,
 
         # Save the file
     local = os.path.join(media_root, f'{noise}'+text_hook.filename)
-    
+    print(local)
     with open(local, 'wb') as filex:
         filex.write(await text_hook.read())
 
     insert_input = {
         "title": title, 
         "author": author,
-        "slug":slug,
-        "text_hook":f'{noise}'+text_hook.filename,
+        "text_hook":local,
         "tags":tags_book.split(',') if tags_book else []
         }
     await insert_data(BookModelPydantic(**insert_input))
@@ -155,7 +161,7 @@ async def postdata_tag(request:Request,
         }  # Context data
     )
     
-@router.get("/add_book")
+@router.get("/add_book", tags=['get'])
 async def render_form_book(request: Request):
     data = [i.tag for i in (await get_list(choice=1))['data']] # All tags select. Might cause some problems in future.
 
@@ -169,7 +175,7 @@ async def render_form_book(request: Request):
         }  # Context data
     )
 
-@router.get("/add_tag")
+@router.get("/add_tag", tags=['get'])
 async def render_form_tag(request: Request):
     data = [i.title for i in (await get_list(choice=0))['data']] # All books select. Might cause some problems in future.
 
@@ -183,16 +189,37 @@ async def render_form_tag(request: Request):
         }  # Context data
     )
 
-@router.get("/books")
+@router.get("/books", tags=['get'])
 async def get_books(request: Request):
-    data = [i.title for i in (await get_list(choice=0))['data']] # All books select. Might cause some problems in future.
-
+    data = (await get_list(choice=0))['data'] # All books select. Might cause some problems in future.
     return templates.TemplateResponse(
-        "tag_form_index.html",  # Template name
+        "get_books.html",  # Template name
         {
         "request": request, 
-        "title": "Add Tag", 
+        "title": "Get books", 
+        'description':'Choice the book!',
         'books':data, 
         'menu':menu
         }  # Context data
     )
+
+@router.get("/book/{book_id}", tags=['get'])
+async def get_book(request: Request, book_id: int):
+    data = (await select_db_data_book(book_id))['data']
+    content = TextLoad(data)
+    return templates.TemplateResponse(
+        "get_book.html",  # Template name
+        {
+        "request": request, 
+        "title": data.title, 
+        'description':'Good reading!',
+        'content':content.push_text(), 
+        'menu':menu
+        }  # Context data
+    )
+
+@router.delete('/action/update/')
+async def delete_all():
+    task = asyncio.create_task(drop_object())
+    await task
+    return {'msg':'Data was deleted'}

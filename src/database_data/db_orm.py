@@ -158,3 +158,13 @@ async def output_data(data:int=0):
             result = res.scalars().all()
             return result
 
+async def select_data_book(data:int):
+    async with async_engine.connect() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+        await conn.commit()
+
+    async with async_session_maker() as session:
+        query = select(BookModelOrm).where(BookModelOrm.id==int(data))
+        res = await session.execute(query)
+        result = res.scalar_one_or_none()
+        return result

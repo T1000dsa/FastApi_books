@@ -1,6 +1,5 @@
 from src.database_data.database import Base, int_pk, created_at, updated_at, str_uniq, ist
-from datetime import datetime 
-from sqlalchemy.orm import Mapped, mapped_column, relationship, joinedload
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy import ForeignKey
 import slugify
 
@@ -8,22 +7,25 @@ class BookModelOrm(Base):
     __tablename__ = 'books'
 
     id:Mapped[int_pk]
-    title:Mapped[str]
+    title:Mapped[str_uniq]
     author:Mapped[str|None]
-    slug:Mapped[str_uniq]
+    slug:Mapped[str]
     created_at:Mapped[created_at]
     updated_at:Mapped[updated_at]
-
-    text_hook:Mapped[str|None] # Path to the file like in Django
+    text_hook:Mapped[str|None]
 
     tag_books:Mapped[list['TagsModelOrm']] = relationship(
         'TagsModelOrm',
         back_populates="book_tags", 
         secondary="tagsinbooks", 
         )
+    
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.slug = slugify.slugify(self.title)
+
     def __set_tags__(self, new):
         self.tag_books=new
-
     
 
 class TagsModelOrm(Base): 

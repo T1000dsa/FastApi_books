@@ -7,6 +7,7 @@ from alembic import context
 
 from src.database_data.settings import get_db_url_sync, get_db_url_async
 from src.database_data.models import *#BookModelOrm, TagsModelOrm, TagsOnBookOrm
+from src.users.user_models import *
 from src.database_data.models import Base
 from src.database_data.database import sync_engine, async_engine
 # alembic revision --autogenerate
@@ -22,7 +23,6 @@ url = get_db_url_async()
 config.set_main_option('sqlalchemy.url', url + '?async_fallback=True') # + '?async_fallback=True'
 
 target_metadata = Base.metadata
-print(config.get_main_option('sqlalchemy.url'))
 
 def run_migrations_offline() -> None:
     """Run migrations in 'offline' mode.

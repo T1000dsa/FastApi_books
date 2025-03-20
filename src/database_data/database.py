@@ -6,11 +6,13 @@ from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, Asyn
 from sqlalchemy.orm import DeclarativeBase, mapped_column, sessionmaker
 from src.database_data.settings import get_db_url_async
 
+import hashlib
+
 db_url = get_db_url_async()
 
 async_engine = create_async_engine(
     url=db_url,
-    echo=True
+    echo=False
     )
 
 sync_engine = create_engine(
@@ -35,7 +37,7 @@ created_at = Annotated[datetime, mapped_column(server_default=func.now())]
 updated_at = Annotated[datetime, mapped_column(server_default=func.now(), onupdate=datetime.now)]
 str_uniq = Annotated[str, mapped_column(unique=True, nullable=False)]
 str_null_true = Annotated[str, mapped_column(nullable=True)]
-ist = Annotated[list, mapped_column(nullable=True)]
+ist = Annotated[hashlib, mapped_column(nullable=False)]
 
 class Base(DeclarativeBase):
     pass

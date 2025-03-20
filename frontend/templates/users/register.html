@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+{% block content %}
+<h1>Sign Up</h1>
+<div class="registration-form">
+    <form action="/register/check" method="post" enctype="multipart/form-data">
+        <!-- Username Field -->
+        <label for="username">Username:</label>
+        <input type="text" id="username" name="username" required>{% if error %}{% if error.1 =='User' %} {{ error[0] }} {% endif %}{% endif %}<br><br>
+
+        <!-- Password Field -->
+        <label for="password">Password:</label>
+        <input type="password" id="password" name="password" required>{% if error %}{% if error.1 =='Pass' %} {{ error[0] }} {% endif %}{% endif %}<br><br> 
+
+        <label for="password">Confirm Password:</label>
+        <input type="password" id="password_again" name="password_again" required><br><br>
+
+        <!-- Email Field -->
+        <label for="mail">Email (optional):</label>
+        <input type="text" id="mail" name="mail">{% if error %}{% if error.1 =='Mail' %} {{ error[0] }} {% endif %}{% endif %}<br><br>
+
+        <!-- Bio Field -->
+        <label for="bio">Bio (optional):</label>
+        <textarea id="bio" name="bio"></textarea>{% if error %}{% if error.1 =='Bio' %} {{ error[0] }} {% endif %}{% endif %}<br><br>
+
+        <!-- Submit Button -->
+        <button type="submit">Register</button>
+    </form>
+</div>
+{% endblock %}

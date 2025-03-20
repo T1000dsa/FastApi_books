@@ -6,6 +6,7 @@ from src.init_data.models import BookModelPydantic, TagsModelPydantic
 from fastapi.templating import Jinja2Templates
 from src.database_data.models import BookModelOrm, TagsModelOrm
 from src.core.services import TextLoad
+from src.menu import menu
 
 import asyncio
 from fastapi import UploadFile, File, Form
@@ -16,13 +17,6 @@ from datetime import datetime
 
 router = APIRouter()
 
-menu = [
-    {'title':'Docs', 'url':'/docs'},
-    {'title':'Home', 'url':'/'},
-    {'title':'Add Book', 'url':'/add_book'},
-    {'title':'Add Tag', 'url':'/add_tag'},
-    {'title':'Get Books', 'url':'/books'},
-]
 
 logger = logging.getLogger(__name__)
 templates = Jinja2Templates(directory="frontend/templates")
@@ -37,7 +31,6 @@ async def read_root(request: Request):
         "index.html",  # Template name
         {
             "request": request, 
-            "title": "Home",
             "content": "Greetings! Choice the book and make you comfortable here!", 
             'menu':menu
             }  # Context data
@@ -105,6 +98,7 @@ async def postdata_book(request:Request,
         tags_book=Form(default='')
         ):
     
+    print(text_hook ,0)
     media_root = os.path.join(os.getcwd(), "src", "media_root", datetime.now().date().strftime('%Y/%m/%d'))
     os.makedirs(media_root, exist_ok=True)
     noise = uuid4().int
@@ -119,7 +113,6 @@ async def postdata_book(request:Request,
 
         # Save the file
     local = os.path.join(media_root, f'{noise}'+text_hook.filename)
-    print(local)
     with open(local, 'wb') as filex:
         filex.write(await text_hook.read())
 
@@ -156,7 +149,6 @@ async def postdata_tag(request:Request,
         "tag_form_index.html",  # Template name
         {
         "request": request, 
-        "title": "Add Book",
         'menu':menu
         }  # Context data
     )
@@ -169,7 +161,6 @@ async def render_form_book(request: Request):
         "book_form_index.html",  # Template name
         {
         "request": request, 
-        "title": "Add Book", 
         'tags':data, 
         'menu':menu
         }  # Context data
@@ -183,7 +174,6 @@ async def render_form_tag(request: Request):
         "tag_form_index.html",  # Template name
         {
         "request": request, 
-        "title": "Add Tag", 
         'books':data, 
         'menu':menu
         }  # Context data
@@ -196,7 +186,6 @@ async def get_books(request: Request):
         "get_books.html",  # Template name
         {
         "request": request, 
-        "title": "Get books", 
         'description':'Choice the book!',
         'books':data, 
         'menu':menu

@@ -3,21 +3,12 @@ from datetime import datetime
 from pydantic import BaseModel, EmailStr, Field, field_validator, model_validator, ValidationInfo
 
 
-class PasswordTrouble(Exception):
-    def __init__(self, message, *args):
-        self.message = message # without this you may get DeprecationWarning
-        # Special attribute you desire with your Error, 
-        # perhaps the value that caused the error?:       
-        # allow users initialize misc. arguments as any other builtin Error
-        super(PasswordTrouble, self).__init__(message, *args) 
-
 class User(BaseModel):
     username:str
     password:str
     password_again:str
     mail:str|None
     bio:str|None
-
 
     @field_validator("username")
     @classmethod

@@ -6,16 +6,25 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import selectinload
 from src.users.user_scheme import User as User_pydantic
 
-async def select_data_user(data:User_pydantic):
+async def select_data_user(data:User_pydantic|str):
     async with async_engine.connect() as conn:
         await conn.run_sync(Base.metadata.create_all)
         await conn.commit()
 
     async with async_session_maker() as session:
-        query = select(User).where(User.username==data.username)
-        res = await session.execute(query)
-        result = res.scalar_one_or_none()
-        return result
+        if type(data) == User_pydantic:
+                query = select(User).where(User.username==data.username)
+                res = await session.execute(query)
+                result = res.scalar_one_or_none()
+                return result
+            
+        if type(data) == str:
+                query = select(User).where(User.username==data)
+                res = await session.execute(query)
+                result = res.scalar_one_or_none()
+                return result
+
+
     
 async def insert_data(data:User_pydantic=None):
     async with async_session_maker() as session:

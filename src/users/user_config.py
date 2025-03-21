@@ -1,8 +1,9 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
 import os
 import hashlib
+import bcrypt
 
-hash_protocol = hashlib.sha512
+hash_protocol = bcrypt
 
 class Settings(BaseSettings):
     JWT_SECRET_KEY:str

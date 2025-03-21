@@ -20,7 +20,7 @@ class User(Base):
         return f"<User(id={self.id}, username={self.username}, is_super_user={self.is_super_user})>"
     
     def set_password(self, password:str):
-        self.password = hash_protocol(password.encode()).hexdigest()
+        self.password = str(hash_protocol.hashpw(password.encode(), hash_protocol.gensalt(rounds=8)))
 
     def check_password(self, check_pass):
-        return check_password_hash(self.password, check_pass)
+        return check_password_hash(check_pass, self.password)

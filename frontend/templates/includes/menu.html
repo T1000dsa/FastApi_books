@@ -1,4 +1,18 @@
 {% for item in menu %}
-    <nav><a href="{{item.url}}">{{ item.title }}</a></nav>
+    {% if item.title=='Login' %}
+        {% if request.cookies %}
+            <nav><a href="/logout">Logout</a></nav>
+        {% else %}
+            <nav><a href="{{item.url}}">{{ item.title }}</a></nav>
+        {% endif %}
+    {% elif item.title=='Registration' %}
+        {% if request.cookies %}
+        {% else %}
+            <nav><a href="{{item.url}}">{{ item.title }}</a></nav>
+        {% endif %}
+
+    {% else %}
+        <nav><a href="{{item.url}}">{{ item.title }}</a></nav>
+    {% endif %}
 {% endfor %}
 <nav><a href="https://github.com/T1000dsa">My GitHub</a></nav>

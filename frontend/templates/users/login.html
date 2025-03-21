@@ -1,13 +1,18 @@
 {% extends 'base.html' %}
 {% block content %}
-<h1>Autorization</h1>
-<form method="POST">
-    <div class="form-error">{{ form.non_fields_errors }}</div>
-    {% for f in form %}
-    <p><label class="form-label" for="{{ f.id_for_label }}">{{ f.label  }}</label>{{ f }}</p>
-    <div class="form-error">{{ f.errors }}</div>
-    {% endfor %}
-    <p><button type="submit">Sign In</button>
-    <p><a href="{% url 'users:password_reset' %}">Forgot the password?</a></p>
-</form>
+<h1>Sigh In</h1>
+<div class="login-form">
+    <form action="/login/check" method="post" enctype="multipart/form-data">
+        <!-- Username Field -->
+        <label for="username">Username:</label>
+        <input type="text" id="username" name="username" required>{% if error %}{% if error.1 =='User' %} {{ error[0] }} {% endif %}{% endif %}<br><br>
+
+        <!-- Password Field -->
+        <label for="password">Password:</label>
+        <input type="password" id="password" name="password" required>{% if error %}{% if error.1 =='Pass' %} {{ error[0] }} {% endif %}{% endif %}<br><br> 
+
+        <!-- Submit Button -->
+        <button type="submit">Log in</button>
+    </form>
+</div>
 {% endblock %}

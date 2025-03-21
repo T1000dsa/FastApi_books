@@ -1,19 +1,19 @@
-from fastapi.responses import FileResponse
-from fastapi import APIRouter, Request, HTTPException
-from fastapi.responses import HTMLResponse
+from fastapi import APIRouter, Request, HTTPException, Response, Depends
+from fastapi.responses import HTMLResponse ,RedirectResponse
 from src.database_data.db_orm import create_data, drop_object, insert_data, update_data, output_data, select_data_book
 from src.init_data.models import BookModelPydantic, TagsModelPydantic
 from fastapi.templating import Jinja2Templates
-from src.database_data.models import BookModelOrm, TagsModelOrm
 from src.core.services import TextLoad
 from src.menu import menu
+from src.users.autentification import security, refresh_token, load_env
+
 
 import asyncio
 from fastapi import UploadFile, File, Form
 import logging
 import os
 from uuid import uuid4
-from datetime import datetime
+from src.core.config import max_file_size, media_root
 
 router = APIRouter()
 
@@ -27,14 +27,20 @@ logging.basicConfig(
 
 @router.get("/", response_class=HTMLResponse)
 async def read_root(request: Request):
-    return templates.TemplateResponse(
+    response = Response()
+    token = request.cookies['access_token']
+    data = (await refresh_token(token))
+
+    response = templates.TemplateResponse(
         "index.html",  # Template name
         {
             "request": request, 
             "content": "Greetings! Choice the book and make you comfortable here!", 
-            'menu':menu
+            'menu':menu,
             }  # Context data
     )
+    
+    return response
 
 @router.get('/action/get_list/{choice}', tags=['get'])
 async def get_list(choice:int):
@@ -97,17 +103,12 @@ async def postdata_book(request:Request,
         text_hook:UploadFile=File(),
         tags_book=Form(default='')
         ):
-    
-    print(text_hook ,0)
-    media_root = os.path.join(os.getcwd(), "src", "media_root", datetime.now().date().strftime('%Y/%m/%d'))
-    os.makedirs(media_root, exist_ok=True)
+
     noise = uuid4().int
 
     if ".." in text_hook.filename or "/" in text_hook.filename:
         raise HTTPException(status_code=400, detail="Invalid file name")
 
-# Limit file size (e.g., 10 MB)
-    max_file_size = 10 * 1024 * 1024  # 10 MB
     if text_hook.size > max_file_size:
         raise HTTPException(status_code=400, detail="File size exceeds the limit")
 
@@ -153,20 +154,20 @@ async def postdata_tag(request:Request,
         }  # Context data
     )
     
-@router.get("/add_book", tags=['get'])
+@router.get("/add_book", tags=['get'], dependencies=[Depends(security.access_token_required)])
 async def render_form_book(request: Request):
     data = [i.tag for i in (await get_list(choice=1))['data']] # All tags select. Might cause some problems in future.
 
     return templates.TemplateResponse(
-        "book_form_index.html",  # Template name
-        {
-        "request": request, 
-        'tags':data, 
-        'menu':menu
-        }  # Context data
-    )
+            "book_form_index.html",  # Template name
+            {
+            "request": request, 
+            'tags':data, 
+            'menu':menu
+            }  # Context data
+        )
 
-@router.get("/add_tag", tags=['get'])
+@router.get("/add_tag", tags=['get'], dependencies=[Depends(security.access_token_required)])
 async def render_form_tag(request: Request):
     data = [i.title for i in (await get_list(choice=0))['data']] # All books select. Might cause some problems in future.
 
@@ -207,7 +208,7 @@ async def get_book(request: Request, book_id: int):
         }  # Context data
     )
 
-@router.delete('/action/update/')
+@router.delete('/action/delete')
 async def delete_all():
     task = asyncio.create_task(drop_object())
     await task

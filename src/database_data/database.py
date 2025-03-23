@@ -12,7 +12,7 @@ db_url = get_db_url_async()
 
 async_engine = create_async_engine(
     url=db_url,
-    echo=True
+    echo=False
     )
 
 sync_engine = create_engine(

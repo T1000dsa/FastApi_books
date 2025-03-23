@@ -1,7 +1,7 @@
 from src.database_data.models import BookModelOrm, TagsModelOrm, TagsOnBookOrm
 from src.database_data.database import async_session_maker, async_engine, Base
 from sqlalchemy import select, update, delete, join
-from src.init_data.models import BookModelPydantic, TagsModelPydantic
+from src.core.schemes import BookModelPydantic, TagsModelPydantic
 import logging
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import selectinload
@@ -30,7 +30,6 @@ async def insert_data(data:TagsModelPydantic|BookModelPydantic=None):
             session.add(BookModelOrm(
                     title=res.title, 
                     author=res.author,
-                    slug=res.slug,
                     text_hook=res.text_hook,
                     tag_books=tag_objs.scalars().all()
                     ))

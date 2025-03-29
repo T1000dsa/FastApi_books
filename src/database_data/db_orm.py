@@ -2,16 +2,9 @@ from src.database_data.models import BookModelOrm, TagsModelOrm, TagsOnBookOrm
 from src.database_data.database import async_session_maker, async_engine, Base
 from sqlalchemy import select, update, delete, join
 from src.core.schemes import BookModelPydantic, TagsModelPydantic
-import logging
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import selectinload
-
-logger = logging.getLogger(__name__)
-
-logging.basicConfig(
-        level=logging.DEBUG,
-        format='%(filename)s:%(lineno)d #%(levelname)-8s '
-               '[%(asctime)s] - %(name)s - %(message)s')
+from src.core.config import logger
 
 
 

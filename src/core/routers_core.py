@@ -78,6 +78,7 @@ async def postdata_book(request:Request,
         raise HTTPException(status_code=400, detail="File size exceeds the limit")
 
         # Save the file
+    os.makedirs(media_root, exist_ok=True)
     local = os.path.join(media_root, f'{noise}'+text_hook.filename)
     with open(local, 'wb') as filex:
         filex.write(await text_hook.read())
@@ -119,7 +120,7 @@ async def postdata_tag(request:Request,
         }  # Context data
     )
     
-@router.get("/add_book", tags=['render']) #, dependencies=[Depends(securityAuthx.access_token_required)]
+@router.get("/add_book", tags=['render'], dependencies=[Depends(securityAuthx.access_token_required)])
 async def render_form_book(request: Request):
     data = [i.tag for i in (await get_list(choice=1).get_obj())] # All tags select. Might cause some problems in future.
 
@@ -132,7 +133,7 @@ async def render_form_book(request: Request):
             }  # Context data
         )
 
-@router.get("/add_tag", tags=['render']) #, dependencies=[Depends(securityAuthx.access_token_required)]
+@router.get("/add_tag", tags=['render'], dependencies=[Depends(securityAuthx.access_token_required)])
 async def render_form_tag(request: Request):
     get_list_data = get_list(choice=0)
     books_data = (await get_list_data.get_obj())

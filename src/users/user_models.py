@@ -1,26 +1,34 @@
 from src.database_data.database import Base, int_pk, created_at, updated_at
-from sqlalchemy.orm import Mapped, mapped_column, relationship
-from src.users.user_config import hash_protocol
-from src.users.services import check_password_hash
+from sqlalchemy.orm import Mapped, mapped_column
+import bcrypt
+from src.core.config import logger
+from typing import Optional
 
-class User(Base):
+class UserModel(Base):
     __tablename__ = 'users'
 
-    id:Mapped[int_pk]
-    username:Mapped[str]
-    password:Mapped[str]
-    mail:Mapped[str|None]
-    bio:Mapped[str|None]
-    join_data:Mapped[created_at]
-    last_time_login:Mapped[updated_at]
-
-    is_super_user:Mapped[bool] = mapped_column(default=False)
+    id: Mapped[int_pk]
+    username: Mapped[str]
+    password: Mapped[str]
+    mail: Mapped[Optional[str]]
+    bio: Mapped[Optional[str]]
+    join_data: Mapped[created_at]
+    last_time_login: Mapped[updated_at]
+    is_active:Mapped[bool] = mapped_column(default=True, nullable=True)
+    is_super_user: Mapped[bool] = mapped_column(default=False)
 
     def __repr__(self):
-        return f"<User(id={self.id}, username={self.username}, is_super_user={self.is_super_user})>"
+        return f"<User(id={self.id}, username={self.username})>"
     
-    def set_password(self, password:str):
-        self.password = str(hash_protocol.hashpw(password.encode(), hash_protocol.gensalt(rounds=8)))
+    def set_password(self, password: str):
+        """Securely hash and store password"""
+        self.password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode()
 
-    def check_password(self, check_pass):
-        return check_password_hash(check_pass, self.password)
+    def check_password(self, plaintext_password: str) -> bool:
+        """Verify password with automatic format correction"""
+            
+        try:
+            return bcrypt.checkpw(plaintext_password.encode('utf-8'), self.password.encode())
+        except Exception as err:
+            logger.error(f"Password verification failed for user {self.id}: {err}")
+            return False

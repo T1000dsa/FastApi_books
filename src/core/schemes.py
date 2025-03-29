@@ -1,5 +1,4 @@
 from pydantic import BaseModel, Field
-from datetime import datetime
 
 class BookModelPydantic(BaseModel):
     title:str
@@ -14,5 +13,3 @@ class TagsModelPydantic(BaseModel):
     tag:str
 
     books:list[int]
-
-

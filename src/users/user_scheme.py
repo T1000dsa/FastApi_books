@@ -10,6 +10,7 @@ class User(BaseModel):
     password_again:str
     mail:str|None
     bio:str|None
+    is_active:bool=True
 
     @field_validator("username")
     @classmethod
@@ -53,3 +54,7 @@ class User(BaseModel):
             raise ValueError("Passwords do not match", 'pass')
         return self
 
+class TokenInfo(BaseModel):
+    access_token:str
+    refresh_token:str|None=None
+    token_type:str='Bearer'

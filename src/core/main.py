@@ -1,7 +1,7 @@
 # venv/Scripts/activate | deactivate; venv -> 1 | 0
 # pip install -U aiogram; -U when venv: 1 | -U if venv == True
 # git add <file> | git add .
-# git commit -m "description" current vers. 006
+# git commit -m "vers. 008"
 # git push origin main
 # python3 -m venv venv
 # venv/Scripts/activate.bat
@@ -18,12 +18,14 @@
 # TODO5 Cache
 # TODO6 Celery
 # TODO7 Rabbidmq or Kafka
-# TODO8 Deploy
+# TODO8 search engine
+# TODO9 Deploy
 
 from fastapi import FastAPI
 from src.core.routers import router as main_router
 from src.core.routers_core import router as core_router
 from src.users.autentification import router as users_router
+#from src.users.auth_pyjwt import router as jwt_router
 
 
 app = FastAPI()

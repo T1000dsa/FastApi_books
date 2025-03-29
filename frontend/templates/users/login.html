@@ -3,13 +3,14 @@
 <h1>Sigh In</h1>
 <div class="login-form">
     <form action="/login/check" method="post" enctype="multipart/form-data">
+        {{ error }}<br>
         <!-- Username Field -->
         <label for="username">Username:</label>
-        <input type="text" id="username" name="username" required>{% if error %}{% if error.1 =='User' %} {{ error[0] }} {% endif %}{% endif %}<br><br>
+        <input type="text" id="username" name="username" value="{{ form_data.username }}" required><br><br>
 
         <!-- Password Field -->
         <label for="password">Password:</label>
-        <input type="password" id="password" name="password" required>{% if error %}{% if error.1 =='Pass' %} {{ error[0] }} {% endif %}{% endif %}<br><br> 
+        <input type="password" id="password" name="password" value="{{ form_data.password }}"required><br><br> 
 
         <!-- Submit Button -->
         <button type="submit">Log in</button>

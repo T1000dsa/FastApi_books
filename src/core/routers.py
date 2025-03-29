@@ -24,7 +24,7 @@ logging.basicConfig(
 async def read_root(request: Request):
     response = Response()
     token = request.cookies.get('access_token')
-    #data = (await refresh_token(token))
+    #data = (await refresh_token(token))'
 
     response = templates.TemplateResponse(
         "index.html",  # Template name

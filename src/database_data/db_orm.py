@@ -1,11 +1,12 @@
+from sqlalchemy import select, update, delete, join
+from sqlalchemy.exc import SQLAlchemyError, IntegrityError
+from sqlalchemy.orm import selectinload, joinedload
+from fastapi import  HTTPException
+
+from src.core.config import logger
 from src.database_data.models import BookModelOrm, TagsModelOrm, TagsOnBookOrm
 from src.database_data.database import async_session_maker, async_engine, Base
-from sqlalchemy import select, update, delete, join
 from src.core.schemes import BookModelPydantic, TagsModelPydantic
-from sqlalchemy.exc import SQLAlchemyError
-from sqlalchemy.orm import selectinload
-from src.core.config import logger
-
 
 
 async def create_data():
@@ -15,81 +16,103 @@ async def create_data():
 
 async def insert_data(data:TagsModelPydantic|BookModelPydantic=None):
     async with async_session_maker() as session:
-
-        if type(data) == BookModelPydantic:
-            res = BookModelPydantic.model_validate(data, from_attributes=True)
-            stm = select(TagsModelOrm).where(TagsModelOrm.id.in_(res.tags))
-            tag_objs = await session.execute(stm)
-            session.add(BookModelOrm(
-                    title=res.title, 
-                    author=res.author,
-                    text_hook=res.text_hook,
-                    tag_books=tag_objs.scalars().all()
-                    ))
-            await session.commit()
-
-        elif type(data) == TagsModelPydantic:
-            res = TagsModelPydantic.model_validate(data, from_attributes=True)
-            stm = select(BookModelOrm).where(BookModelOrm.id.in_(res.books))
-            tag_objs = await session.execute(stm)
-            session.add(TagsModelOrm(
-                tag=res.tag,
-                book_tags=tag_objs.scalars().all()
-                ))
-            await session.commit()
-
-
-async def update_data(id_data: int, data: BookModelPydantic|TagsModelPydantic):
-    async with async_session_maker() as session:
+        logger.debug(data)
         try:
-            # Validate the input data
             if type(data) == BookModelPydantic:
                 res = BookModelPydantic.model_validate(data, from_attributes=True)
-                
-                # Fetch the tags from the database based on the tag IDs in the input data
-                tag_objs = (await session.execute(select(TagsModelOrm).where(TagsModelOrm.id.in_(res.tags)))).scalars().all()
-                
-                # Fetch the book to be updated, eagerly loading the tag_books relationship
-                book = (await session.execute(select(BookModelOrm).where(BookModelOrm.id == id_data)
-                        .options(selectinload(BookModelOrm.tag_books))) # Eagerly load the relationship
-                ).scalar_one()
-                
-                # Clear existing tags and apply new tags
-                book.tag_books.clear()  # Remove existing tags
-                book.tag_books.extend(tag_objs)  # Add new tags
-                
-                # Add the book to the session (if not already tracked)
-                session.add(book)
-                
-                # Commit the changes to the database
+                stm = select(TagsModelOrm).where(TagsModelOrm.id.in_(res.tags))
+                tag_objs = await session.execute(stm)
+                session.add(BookModelOrm(
+                        title=res.title, 
+                        author=res.author,
+                        text_hook=res.text_hook,
+                        tag_books=tag_objs.scalars().all()
+                        ))
                 await session.commit()
-                
-                # Refresh the book instance to reflect the changes
-                await session.refresh(book)
-                
-                return book
-            
+
             elif type(data) == TagsModelPydantic:
                 res = TagsModelPydantic.model_validate(data, from_attributes=True)
-                book_objs = (await session.execute(select(BookModelOrm).where(BookModelOrm.id.in_(res.books)))).scalars().all()
-                tag = (await session.execute(select(TagsModelOrm).where(TagsModelOrm.id == id_data)
-                        .options(selectinload(TagsModelOrm.book_tags)))
-                ).scalar_one()
-                
-
-                tag.book_tags.clear()  # Remove existing books
-                tag.book_tags.extend(book_objs)  # Add new books
-                
-                session.add(tag)
+                stm = select(BookModelOrm).where(BookModelOrm.id.in_(res.books))
+                tag_objs = await session.execute(stm)
+                session.add(TagsModelOrm(
+                    tag=res.tag,
+                    book_tags=tag_objs.scalars().all()
+                    ))
                 await session.commit()
-                await session.refresh(tag)
-                
-                return tag
+        except IntegrityError as err:
+            raise err
 
+
+async def update_data(id_data: int, data: BookModelPydantic | TagsModelPydantic):
+    async with async_session_maker() as session:
+        try:
+            if isinstance(data, BookModelPydantic):
+                # 1. First get the book with relationships
+                book = await session.execute(
+                    select(BookModelOrm)
+                    .where(BookModelOrm.id == id_data)
+                    .options(selectinload(BookModelOrm.tag_books))
+                )
+                book = book.scalar_one()
+
+                # 2. Update scalar fields
+                for field, value in data.model_dump(exclude={'tags'}).items():
+                    setattr(book, field, value)
+
+                # 3. Handle tags - verify existence first
+                if data.tags:
+                    tag_objs = await session.execute(
+                        select(TagsModelOrm)
+                        .where(TagsModelOrm.id.in_(data.tags))
+                    )
+                    found_tags = tag_objs.scalars().all()
+                    
+                    # Validate all tags exist
+                    if len(found_tags) != len(data.tags):
+                        found_ids = {t.id for t in found_tags}
+                        missing = set(data.tags) - found_ids
+                        raise ValueError(f"Tags not found: {missing}")
+
+                    book.tag_books.clear()
+                    book.tag_books.extend(found_tags)
+
+                await session.commit()
+                return book
+
+            elif isinstance(data, TagsModelPydantic):
+                # Similar pattern for tags
+                tag = await session.execute(
+                    select(TagsModelOrm)
+                    .where(TagsModelOrm.id == id_data)
+                    .options(selectinload(TagsModelOrm.book_tags))
+                ).scalar_one()
+
+                if data.books:
+                    book_objs = await session.execute(
+                        select(BookModelOrm)
+                        .where(BookModelOrm.id.in_(data.books))
+                    )
+                    found_books = book_objs.scalars().all()
+                    
+                    if len(found_books) != len(data.books):
+                        found_ids = {b.id for b in found_books}
+                        missing = set(data.books) - found_ids
+                        raise ValueError(f"Books not found: {missing}")
+
+                    tag.book_tags.clear()
+                    tag.book_tags.extend(found_books)
+
+                await session.commit()
+                return tag
+            
+        except ValueError as e:
+            await session.rollback()
+            logger.error(f"Validation error: {e}")
+            raise HTTPException(status_code=400, detail=str(e))
         except SQLAlchemyError as e:
             await session.rollback()
-            logger.error(f"Error updating book: {e}")
-            raise e
+            logger.error(f"Database error: {e}")
+            raise HTTPException(status_code=500, detail="Database operation failed")
 
 
 async def drop_object(data:TagsModelPydantic|BookModelPydantic=None, drop_id:int=None):
@@ -151,12 +174,37 @@ async def output_data(data:int=0):
             return result
 
 async def select_data_book(data:int):
-    async with async_engine.connect() as conn:
-        await conn.run_sync(Base.metadata.create_all)
-        await conn.commit()
-
     async with async_session_maker() as session:
         query = select(BookModelOrm).where(BookModelOrm.id==int(data))
         res = await session.execute(query)
         result = res.scalar_one_or_none()
         return result
+    
+async def select_data_tag(data: list | BookModelOrm):
+    async with async_session_maker() as session:
+        if isinstance(data, list):
+            # Handle list of tag names
+            tag_list = []
+            for tag_name in data:
+                result = await session.execute(
+                    select(TagsModelOrm)
+                    .where(TagsModelOrm.tag == tag_name)
+                )
+                tag = result.scalar_one_or_none()
+                if tag:
+                    tag_list.append(tag)
+            return tag_list
+            
+        elif isinstance(data, BookModelOrm):
+            # Handle BookModelOrm with eager loading
+            result = await session.execute(
+                select(BookModelOrm)
+                .where(BookModelOrm.id == data.id)
+                .options(
+                    selectinload(BookModelOrm.tag_books)  # Better than joinedload for collections
+                )
+            )
+            book = result.scalars().first()
+            return book.tag_books if book else []
+        
+    return []

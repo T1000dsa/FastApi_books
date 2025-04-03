@@ -1,4 +1,12 @@
-from src.database_data.db_orm import create_data, drop_object, insert_data, update_data, output_data, select_data_book
+from fastapi import HTTPException
+from fastapi import UploadFile
+import os
+from uuid import uuid4
+import logging
+
+from src.database_data.db_orm import (output_data, select_data_book)
+from src.core.config import max_file_size, media_root
+
 class Choice:
     def __init__(self, choice:int):
         self.choice = choice
@@ -10,6 +18,23 @@ class Select:
         self.select_id = select_id
     def get_obj(self):
         return select_data_book(self.select_id)
+    
+async def book_process(text_hook:UploadFile) -> str:
+    noise = uuid4().int
+
+    if ".." in text_hook.filename or "/" in text_hook.filename:
+        raise HTTPException(status_code=400, detail="Invalid file name")
+
+    if text_hook.size > max_file_size:
+        raise HTTPException(status_code=400, detail="File size exceeds the limit")
+
+    os.makedirs(media_root, exist_ok=True)
+    local = os.path.join(media_root, f'{noise}')
+
+    with open(local, 'wb') as filex:
+        filex.write(await text_hook.read())
+
+    return local
     
 get_list = Choice
 get_select = Select

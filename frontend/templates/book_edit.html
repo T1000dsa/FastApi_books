@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+{% block content %}
+<a href="/book/{{ book.id }}" class="btn btn-secondary">Back</a>
+<title>Edit {{ book.title }}!</title>
+<h1>Edit {{ book.title }}</h1>
+
+<form action="/action/edit_book_complete/{{ book.id }}" method="post" enctype="multipart/form-data">
+    <!-- Required fields MUST have name attributes -->
+    <div class="mb-3">
+        <label for="title">Title:</label>
+        <input type="text" id="title" name="title" value="{{ book.title }}" required>
+    </div>
+
+    <div class="mb-3">
+        <label for="author">Author:</label>
+        <input type="text" id="author" name="author" value="{{ book.author }}" required>
+    </div>
+
+
+    <!-- File Upload (Show current file if exists) -->
+    <div class="mb-3">
+        <label for="text_hook" class="form-label">Text Hook:</label>
+        {% if book.text_hook %}
+        <p>Current file: {{ book.text_hook.split('/')[-1] }}</p>
+        {% endif %}
+        <input type="file" class="form-control" id="text_hook" name="text_hook">
+    </div>
+
+    <!-- Tags Selection -->
+    <div class="mb-3">
+        <label class="form-label">Tags:</label>
+        {% for tag in all_tags %}
+        <div class="form-check">
+            <input class="form-check-input" type="checkbox" 
+                   name="tags" id="tag-{{ loop.index }}" 
+                   value="{{ tag }}"
+                   {% if tag in book.tags %}checked{% endif %}>
+            <label class="form-check-label" for="tag-{{ loop.index }}">
+                {{ tag }}
+            </label>
+        </div>
+        {% endfor %}
+    </div>
+
+    <button type="submit" class="btn btn-primary">Update Book</button>
+</form>
+{% endblock %}

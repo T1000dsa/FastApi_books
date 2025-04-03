@@ -5,5 +5,6 @@ menu = [
     {'title':'Add Tag', 'url':'/action/add_tag'},
     {'title':'Get Books', 'url':'/books'},
     {'title':'Registration', 'url':'/register'},
-    {'title':'Login', 'url':'/login'}
+    {'title':'Login', 'url':'/login'},
+     {'title':'Profile', 'url':'/profile'}
 ]

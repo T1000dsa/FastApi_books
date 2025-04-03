@@ -13,7 +13,8 @@ ACCESS_TYPE = 'access_token'
 REFRESH_TYPE = 'refresh_token'
 
 access_token_expire:int = 15
-refresh_token_expire:int =60*60*24*30
+refresh_token_expire:int = 60*24*7
+refresh_close:int = 5
 
 if os.path.exists(media_root) == False:
     os.makedirs(media_root, exist_ok=True)
@@ -22,8 +23,8 @@ class AuthJWT(BaseModel):
     private_key_path:Path = base_dir / 'certf' / 'jwt-private.pem'
     public_key_path:Path = base_dir / 'certf' / 'jwt-public.pem'
     algorithm:str = 'RS256'
-    access_token_expire_minutes:int = access_token_expire
-    refresh_token_expire_minutes:int = refresh_token_expire
+    access_token_expire:int = access_token_expire
+    refresh_token_expire:int = refresh_token_expire
 
 authJWT = AuthJWT()
 

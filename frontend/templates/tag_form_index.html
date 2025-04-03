@@ -2,14 +2,9 @@
 <title>{{ title }}</title>
 {% block content %}
 <h1>{{ title }}</h1>
-<form action="/action/insert/tag/form" method="post" enctype="multipart/form-data">
+<form action="/action/add_tag" method="post" enctype="multipart/form-data">
     <label for="title">Tag:</label>
     <input type="text" id="tag" name="tag" required><br><br>
-
-    <label for="title">Books:</label>
-    {% for item in books %}
-        <button type="button" onclick="addTag('{{ item }}')">{{ item }}</button><br>
-    {% endfor %}
     <button type="submit">Submit</button>
     </form>
 {% endblock %}

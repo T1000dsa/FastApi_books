@@ -18,8 +18,9 @@ class TextLoad:
 
         with open(adress, 'rb') as file:
             detector = detect(file.read())
-
+            
         encod = detector['encoding']
+
         with open(adress, encoding=encod) as file:
             text_view = file.read()
 

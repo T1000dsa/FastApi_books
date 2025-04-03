@@ -5,10 +5,16 @@
         {% else %}
             <nav><a href="{{item.url}}">{{ item.title }}</a></nav>
         {% endif %}
+
     {% elif item.title=='Registration' %}
         {% if request.cookies %}
         {% else %}
             <nav><a href="{{item.url}}">{{ item.title }}</a></nav>
+        {% endif %}
+
+    {% elif item.title=='Profile' %}
+        {% if request.cookies %}
+            <nav><a href="/profile">Profile</a></nav>
         {% endif %}
 
     {% else %}

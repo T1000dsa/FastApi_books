@@ -1,23 +1,27 @@
 from fastapi import HTTPException
 from fastapi import UploadFile
-import os
+from sqlalchemy.ext.asyncio import AsyncSession
 from uuid import uuid4
-import logging
+import os
 
 from src.database_data.db_orm import (output_data, select_data_book)
 from src.core.config import max_file_size, media_root
 
+
 class Choice:
-    def __init__(self, choice:int):
+    def __init__(self, choice:int, session:AsyncSession):
         self.choice = choice
+        self.session = session
+
     def get_obj(self):
-        return output_data(self.choice)
+        return output_data(self.session, self.choice)
     
 class Select:
-    def __init__(self, select_id:int):
+    def __init__(self, select_id:int, session:AsyncSession):
         self.select_id = select_id
+        self.session = session
     def get_obj(self):
-        return select_data_book(self.select_id)
+        return select_data_book(self.session, self.select_id)
     
 async def book_process(text_hook:UploadFile) -> str:
     noise = uuid4().int

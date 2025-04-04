@@ -1,9 +1,12 @@
-from src.database_data.models import BookModelOrm
 import os
 from charset_normalizer import detect
+
+from src.database_data.models.models import BookModelOrm
+
+
 class TextLoad:
-      def __init__(self, data):
-          self.data:BookModelOrm = data
+      def __init__(self, data:BookModelOrm):
+          self.data = data
 
       def push_text(self, *path):
         if path:

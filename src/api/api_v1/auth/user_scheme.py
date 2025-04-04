@@ -53,8 +53,3 @@ class User(BaseModel):
         if self.password != self.password_again:
             raise ValueError("Passwords do not match", 'pass')
         return self
-
-class TokenInfo(BaseModel):
-    access_token:str
-    refresh_token:str|None=None
-    token_type:str='Bearer'

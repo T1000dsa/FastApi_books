@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+<title>{{ title }}</title>
+{% block content %}
+{{ prev_pag }}
+<h1>{{ title }}</h1>
+    {{ description }}<br>
+    {% for item in books[page-1:per_page] %}
+    <br>{{ item.title }}
+    <br><a href="book/{{ item.id }}">Read the book</a><br>
+    {% endfor %}
+
+    <div class="pagination">
+        {% if page > 1 %}
+            <a href="?page={{ page-1 }}">Previous</a>
+        {% endif %}
+        <span>Page {{ page }}</span>
+        <a href="?page={{ page+1 }}">Next</a>
+    </div>
+
+{% endblock %}

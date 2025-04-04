@@ -1,18 +1,12 @@
 from logging.config import fileConfig
-
 from sqlalchemy import engine_from_config
 from sqlalchemy import pool
-
 from alembic import context
 
-from src.database_data.settings import get_db_url_sync, get_db_url_async
-from src.database_data.models import *#BookModelOrm, TagsModelOrm, TagsOnBookOrm
-from src.users.user_models import *
-from src.database_data.models import Base
-from src.database_data.database import sync_engine, async_engine
+from src.database_data.settings import get_db_url_async
+from src.database_data.models.models import Base, BookModelOrm, TagsModelOrm, TagsOnBookOrm
 # alembic revision --autogenerate
 # alembic upgrade head
-
 
 config = context.config
 

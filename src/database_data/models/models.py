@@ -1,4 +1,4 @@
-from src.database_data.database import Base, int_pk, created_at, updated_at, str_uniq, ist
+from src.database_data.models.base import Base, int_pk, created_at, updated_at, str_uniq
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy import ForeignKey
 import slugify

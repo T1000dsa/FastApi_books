@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, Request, HTTPException, status
 from fastapi.responses import JSONResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
-from sqlalchemy.exc import SQLAlchemyError, IntegrityError
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import UploadFile, File, Form
 from uuid import uuid4
@@ -10,13 +10,13 @@ import asyncio
 import logging
 
 from src.menu import menu
-from src.api.api_v1.auth.autentification import securityAuthx
 from src.core.utils import get_list, book_process
-from src.database_data.db_orm import ( drop_object, insert_data, update_data, select_data_tag, select_data_book)
+from src.api.api_v1.orm.db_orm import ( drop_object, insert_data, update_data, select_data_tag, select_data_book)
 from src.core.schemes import BookModelPydantic, TagsModelPydantic
 from src.core.services import TextLoad
-from src.database_data.db_helper import db_helper
+from src.core.database.db_helper import db_helper
 from src.core.config import frontend_root
+from src.api.api_v1.auth.config import securityAuthx
 
 
 router = APIRouter(prefix='/action')

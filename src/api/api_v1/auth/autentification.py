@@ -6,11 +6,10 @@ from typing import Annotated, Optional
 import logging
 
 from src.api.api_v1.auth.user_scheme import User
-from src.api.api_v1.auth.user_orm import select_data_user, insert_data, update_data, delete_data
-from src.database_data.db_helper import db_helper
+from src.api.api_v1.orm.user_orm import select_data_user, insert_data
+from src.core.database.db_helper import db_helper
 from src.api.api_v1.auth.config import templates_users, securityAuthx
-from src.api.api_v1.auth.utils import refresh_logic
-from src.core.config import (ACCESS_TYPE, REFRESH_TYPE, TOKEN_TYPE, refresh_token_expire, access_token_expire)
+from src.core.config import (ACCESS_TYPE, REFRESH_TYPE)
 from src.menu import menu
 
 
@@ -23,13 +22,13 @@ async def register(
     request:Request,
     ):
     return templates_users.TemplateResponse(
-        "users/register.html",  # Template name
+        "users/register.html",
         {
             "request": request,
             'menu':menu,
             'form_data': {} 
 
-            }  # Context data
+            }
     )
 
 @router.post('/register')
@@ -71,7 +70,7 @@ async def register_check(
         await insert_data(session, user)
     else:
         return templates_users.TemplateResponse(
-        "users/register.html",  # Template name
+        "users/register.html",
         {
             "request": request,
             'menu':menu,
@@ -87,7 +86,7 @@ async def register_check(
 @router.post('/register_success')
 async def reg_success(request:Request):
     return templates_users.TemplateResponse(
-        "users/register_success.html",  # Template name
+        "users/register_success.html",
         {
             "request": request,
             'menu': menu
@@ -97,7 +96,7 @@ async def reg_success(request:Request):
 @router.get('/login')
 async def login(request:Request):
     return templates_users.TemplateResponse(
-        "users/login.html",  # Template name
+        "users/login.html",
         {
             "request": request,
             'menu': menu,
@@ -120,30 +119,31 @@ async def login_check(
     data = await select_data_user(session, username)
     if data is not None:
         if data.username == username and data.check_password(password):
+            
             user_data = {'uid':str(data.id)}
-            token = securityAuthx.create_access_token(**user_data).decode()
+            access_token = securityAuthx.create_access_token(**user_data).decode()
             refresh_token = securityAuthx.create_refresh_token(**user_data).decode()
 
             response = RedirectResponse(url="/", status_code=303) 
             
             response.set_cookie(
             key=ACCESS_TYPE,
-            value=token,
-            httponly=True,  # Prevent client-side JavaScript from accessing the cookie
-            secure=True,     # Ensure the cookie is only sent over HTTPS
-            samesite="lax"   # Prevent CSRF attacks
-            )
+            value=access_token,
+            httponly=True,
+            samesite="lax",
+            path='/'
+        )
 
             response.set_cookie(
             key=REFRESH_TYPE,
             value=refresh_token,
-            httponly=True,  # Prevent client-side JavaScript from accessing the cookie
-            secure=True,     # Ensure the cookie is only sent over HTTPS
-            samesite="lax"   # Prevent CSRF attacks
-            )
+            httponly=True,
+            samesite="lax",
+            path='/' # default path already /
+
+        )
             return response
-        
-    response = RedirectResponse(url="/login", status_code=200) 
+
         
     return templates_users.TemplateResponse(
         "users/login.html",  # Template name
@@ -168,14 +168,18 @@ async def refresh_endpoint(
     request: Request,
     session: AsyncSession = Depends(db_helper.session_getter)
 ):
-    """Public endpoint with DI"""
-    new_token = await refresh_logic(request, session)
+    new_token = None #await refresh_logic(request, session)
     if not new_token:
         raise HTTPException(status_code=401)
     
     response = Response(status_code=204)
-    print(response)
-    response.set_cookie(...)
+    response.set_cookie(
+            key=ACCESS_TYPE,
+            value=new_token,
+            httponly=True,  # Prevent client-side JavaScript from accessing the cookie
+            secure=True,     # Ensure the cookie is only sent over HTTPS
+            samesite="lax"   # Prevent CSRF attacks
+            )
     return response
 
 

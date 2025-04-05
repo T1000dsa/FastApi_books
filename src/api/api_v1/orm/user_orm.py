@@ -1,6 +1,6 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, update, delete, join
-from typing import Union
+from typing import Union, Optional
 import logging
 
 from src.api.api_v1.auth.user_models import UserModel
@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 async def select_data_user(
     session: AsyncSession,
     data: Union[User_pydantic, str, int]
-) -> UserModel:
+) -> Optional[UserModel]:
    
     try:
         if isinstance(data, User_pydantic):

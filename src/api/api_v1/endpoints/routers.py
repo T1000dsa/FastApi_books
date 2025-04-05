@@ -4,6 +4,7 @@ from fastapi.templating import Jinja2Templates
 from fastapi_pagination import Page
 from fastapi_pagination.ext.sqlalchemy import paginate
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
 from typing import Annotated
 import logging
 import os
@@ -11,10 +12,11 @@ import os
 from src.core.services import TextLoad
 from src.menu import menu
 from src.core.utils import get_list, get_select
-from src.database_data.db_orm import select_data_tag
-from src.core.config import pagination_pages, frontend_root
-from src.database_data.db_helper import db_helper
-
+from src.api.api_v1.orm.db_orm import select_data_tag, paginator, output_data
+from src.core.config import per_page, frontend_root
+from src.core.database.db_helper import db_helper
+from src.api.api_v1.auth.config import securityAuthx
+from src.core.database.models.models import BookModelOrm
 
 
 router = APIRouter()
@@ -36,29 +38,43 @@ async def read_root(request: Request):
             'menu':menu,
             }
     )
-    
     return response
 
-@router.get('/books', tags=['books'])
+@router.get("/books/{page}", dependencies=[Depends(securityAuthx.access_token_required)])
 async def get_books(
-    session:Annotated[AsyncSession, Depends(db_helper.session_getter)],
-    request:Request):
-    get_list_data = get_list(choice=0, session=session)
-    books_data = list(await get_list_data.get_obj())
-    pag_data = int(len(books_data) / pagination_pages)
-    current = 1
+    request:Request,
+    page: int=1,
+    session: AsyncSession = Depends(db_helper.session_getter)
 
-    return templates.TemplateResponse(
+):
+    try:
+        # Proper pagination query
+        paginated_books = await paginator(session, page)
+        all_books = await output_data(session)
+        lenght_data = (len(all_books) / per_page)
+
+        if str(lenght_data).split('.')[1] != '0':
+            lenght_data = int(lenght_data+1)
+
+
+        data = {
+            'current_page':page,
+            'total_pages':lenght_data
+        }
+        
+        return templates.TemplateResponse(
         "get_books.html",  # Template name
         {
         "request": request, 
-        'description':'Choice the book!',
-        'books':books_data,
+        'description':'Good reading!',
         'menu':menu,
-        'per_page':pag_data,
-        'page':current,
-        }
+        "books":paginated_books,
+        "data":data
+        }  # Context data
     )
+    except Exception as e:
+        logger.error(f"Error fetching books: {e}")
+        raise HTTPException(status_code=500, detail="Error fetching books")
 
 @router.get('/tags', tags=['tags'])
 async def get_tags(session:Annotated[AsyncSession, Depends(db_helper.session_getter)]):
@@ -91,8 +107,3 @@ async def get_book(
         'book':data
         }  # Context data
     )
-
-users = [1, 2, 3, 4, 5, 6, 7, 8 , 9 ]
-@router.get('/test')
-async def test() -> Page[int]:
-    return paginate(users)

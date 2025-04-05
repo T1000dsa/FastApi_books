@@ -23,10 +23,12 @@ TOKEN_TYPE = "type"
 ACCESS_TYPE = 'access'
 REFRESH_TYPE = 'refresh'
 
-access_token_expire:int = 15
-refresh_token_expire:int = 60*24*7
-refresh_time:int = 5
-pagination_pages:int = 2
+access_token_expire:int = 20 # minutes 
+refresh_token_expire:int = 60*24*7 # minutes 
+refresh_time:int = 5 # refresh each 15 minutes 20 - 5 = 15
+per_page:int = 2
+
+
 
 if os.path.exists(media_root) == False:
     os.makedirs(media_root, exist_ok=True)
@@ -54,6 +56,9 @@ class Current_ApiPrefix(BaseModel):
 class Mode(BaseModel):
     mode:str='DEV'
 
+class Jwt(BaseModel):
+    key:str
+
 
 class DatabaseConfig(BaseModel): 
     url: PostgresDsn
@@ -74,5 +79,6 @@ class Settings(BaseSettings):
     data: Current_ApiPrefix = Current_ApiPrefix()
     mode: Mode = Mode()  # Default provided
     db: DatabaseConfig
+    jwt_key: Jwt 
 
 settings = Settings()

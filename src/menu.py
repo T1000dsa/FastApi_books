@@ -3,8 +3,8 @@ menu = [
     {'title':'Home', 'url':'/'},
     {'title':'Add Book', 'url':'/action/add_book'},
     {'title':'Add Tag', 'url':'/action/add_tag'},
-    {'title':'Get Books', 'url':'/books'},
+    {'title':'Get Books', 'url':'/books/1'},
     {'title':'Registration', 'url':'/register'},
     {'title':'Login', 'url':'/login'},
-     {'title':'Profile', 'url':'/profile'}
+    {'title':'Profile', 'url':'/profile'},
 ]

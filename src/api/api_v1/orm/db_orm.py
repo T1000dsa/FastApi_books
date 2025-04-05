@@ -5,9 +5,9 @@ from fastapi import  HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.config import logger
-from src.database_data.models.models import BookModelOrm, TagsModelOrm, TagsOnBookOrm
+from src.core.database.models.models import BookModelOrm, TagsModelOrm, TagsOnBookOrm
 from src.core.schemes import BookModelPydantic, TagsModelPydantic
-from src.database_data.db_helper import db_helper
+from src.core.config import per_page
 
 
 async def insert_data(
@@ -209,3 +209,9 @@ async def select_data_tag(
         book = result.scalars().first()
         return book.tag_books if book else []
     return []
+
+async def paginator(session:AsyncSession, page:int):
+    stmt = select(BookModelOrm).limit(per_page).offset((page-1)*per_page)
+    result = await session.execute(stmt)
+    books = result.scalars().all()
+    return books

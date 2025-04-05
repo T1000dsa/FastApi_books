@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from uuid import uuid4
 import os
 
-from src.database_data.db_orm import (output_data, select_data_book)
+from src.api.api_v1.orm.db_orm import (output_data, select_data_book)
 from src.core.config import max_file_size, media_root
 
 

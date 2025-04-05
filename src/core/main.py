@@ -23,7 +23,6 @@
 # global_TODO Deploy [0, 0, 0, 0, 0]
 
 from contextlib import asynccontextmanager
-from fastapi_pagination import Page, paginate, add_pagination
 from fastapi import FastAPI
 import logging 
 
@@ -49,10 +48,8 @@ async def lifespan(app: FastAPI):
 app = FastAPI(lifespan=lifespan)
 logger = logging.getLogger(__name__)
 
-add_pagination(app)
 init_token_refresh_middleware(app)
 securityAuthx.handle_errors(app)
-
 
 app.include_router(main_router)
 app.include_router(core_router)

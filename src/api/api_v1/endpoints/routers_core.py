@@ -9,7 +9,6 @@ from typing import Annotated
 import asyncio
 import logging
 
-from src.menu import menu
 from src.core.utils import get_list, book_process
 from src.api.api_v1.orm.db_orm import ( drop_object, insert_data, update_data, select_data_tag, select_data_book)
 from src.core.schemes import BookModelPydantic, TagsModelPydantic
@@ -17,6 +16,8 @@ from src.core.services import TextLoad
 from src.core.database.db_helper import db_helper
 from src.core.config import frontend_root
 from src.api.api_v1.auth.config import securityAuthx
+from src.core.config import menu
+from src.core.urls import choice_from_menu
 
 
 router = APIRouter(prefix='/action')
@@ -89,7 +90,8 @@ async def render_form_book(
             'title':'Add Book',
             "request": request, 
             'tags':data, 
-            'menu':menu
+            'menu':menu,
+            "menu_data":choice_from_menu
             }  # Context data
         )
 
@@ -109,7 +111,8 @@ async def postdata_book(
         "title": title, 
         "author": author,
         "text_hook":local,
-        "tags":result
+        "tags":result,
+        "menu_data":choice_from_menu
         }
     try:
         await insert_data(session, BookModelPydantic(**insert_input))
@@ -134,6 +137,7 @@ async def render_form_tag(request: Request):
         {
         "request": request, 
         'menu':menu,
+        "menu_data":choice_from_menu
         }  # Context data
     )
 
@@ -160,6 +164,7 @@ async def postdata_tag(
         {
         "request": request, 
         'menu':menu,
+        "menu_data":choice_from_menu
         }  # Context data
     )
 
@@ -182,7 +187,8 @@ async def update_book_render(
         {
         "request": request, 
         'menu':menu,
-        'book':book_obj
+        'book':book_obj,
+        "menu_data":choice_from_menu
         }  # Context data
     )
 
@@ -210,7 +216,8 @@ async def update_book(
                 "title":title,
                 "author":author,
                 "text_hook":text_path,
-                "tags":tags
+                "tags":tags,
+                "menu_data":choice_from_menu
             }   
             
             result = await update_data(session, book_id, BookModelPydantic(**insert))
@@ -237,7 +244,8 @@ async def delete_book_id(
         "request": request, 
         'menu':menu,
         'book':book,
-        'lost':len(text_data)
+        'lost':len(text_data),
+        "menu_data":choice_from_menu
         }
     )
 

@@ -2,7 +2,7 @@
 {% block content %}
 <title>{{ title }}</title>
 <h1>{{ title }}</h1>
-<form action="/action/add_book" method="post" enctype="multipart/form-data">
+<form action="{{menu_data('Add Book').url}}" method="post" enctype="multipart/form-data">
     <!-- Corrected form attributes -->
     <label for="title">Title:</label>
     <input type="text" id="title" name="title" required><br><br>

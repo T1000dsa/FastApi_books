@@ -9,8 +9,8 @@ from src.api.api_v1.auth.user_scheme import User
 from src.api.api_v1.orm.user_orm import select_data_user, insert_data
 from src.core.database.db_helper import db_helper
 from src.api.api_v1.auth.config import templates_users, securityAuthx
-from src.core.config import (ACCESS_TYPE, REFRESH_TYPE)
-from src.menu import menu
+from src.core.config import (ACCESS_TYPE, REFRESH_TYPE, menu)
+from src.core.urls import choice_from_menu
 
 
 router = APIRouter(tags=['auth'])
@@ -26,7 +26,8 @@ async def register(
         {
             "request": request,
             'menu':menu,
-            'form_data': {} 
+            'form_data': {} ,
+            "menu_data":choice_from_menu
 
             }
     )
@@ -62,7 +63,8 @@ async def register_check(
                 "request": request,
                 'menu': menu,
                 'error':error_data.args[0],
-                'form_data': form_data 
+                'form_data': form_data ,
+                "menu_data":choice_from_menu
             }
         )
     select_bool = await select_data_user(session, user)
@@ -75,7 +77,8 @@ async def register_check(
             "request": request,
             'menu':menu,
             'error':'This login already exists',
-            'form_data': form_data 
+            'form_data': form_data ,
+             "menu_data":choice_from_menu
             }
     )
 
@@ -89,7 +92,8 @@ async def reg_success(request:Request):
         "users/register_success.html",
         {
             "request": request,
-            'menu': menu
+            'menu': menu,
+            "menu_data":choice_from_menu    
         }
     )
 
@@ -100,7 +104,8 @@ async def login(request:Request):
         {
             "request": request,
             'menu': menu,
-            'form_data':{}
+            'form_data':{},
+            "menu_data":choice_from_menu
         }
     )
 
@@ -130,16 +135,14 @@ async def login_check(
             key=ACCESS_TYPE,
             value=access_token,
             httponly=True,
-            samesite="lax",
-            path='/'
+            samesite="lax"
         )
 
             response.set_cookie(
             key=REFRESH_TYPE,
             value=refresh_token,
             httponly=True,
-            samesite="lax",
-            path='/' # default path already /
+            samesite="lax"
 
         )
             return response
@@ -151,7 +154,8 @@ async def login_check(
             "request": request,
             'menu': menu,
             'error':'Incorrect password or username',
-            "form_data":form_data
+            "form_data":form_data,
+            "menu_data":choice_from_menu
         }
     )
 
@@ -199,5 +203,6 @@ async def user_profile(
             'menu': menu,
             'error':'Incorrect password or username',
             "user":user,
+            "menu_data":choice_from_menu
         }
     )

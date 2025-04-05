@@ -1,22 +1,18 @@
 from fastapi import APIRouter, Request, HTTPException, Response, Depends
-from fastapi.responses import HTMLResponse ,RedirectResponse
+from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
-from fastapi_pagination import Page
-from fastapi_pagination.ext.sqlalchemy import paginate
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
 from typing import Annotated
 import logging
-import os
 
 from src.core.services import TextLoad
-from src.menu import menu
 from src.core.utils import get_list, get_select
 from src.api.api_v1.orm.db_orm import select_data_tag, paginator, output_data
 from src.core.config import per_page, frontend_root
 from src.core.database.db_helper import db_helper
 from src.api.api_v1.auth.config import securityAuthx
-from src.core.database.models.models import BookModelOrm
+from src.core.config import menu
+from src.core.urls import choice_from_menu
 
 
 router = APIRouter()
@@ -36,6 +32,7 @@ async def read_root(request: Request):
             "request": request, 
             "content": "Greetings! Choice the book and make you comfortable here!", 
             'menu':menu,
+            "menu_data":choice_from_menu
             }
     )
     return response
@@ -69,7 +66,8 @@ async def get_books(
         'description':'Good reading!',
         'menu':menu,
         "books":paginated_books,
-        "data":data
+        "data":data,
+        "menu_data":choice_from_menu
         }  # Context data
     )
     except Exception as e:
@@ -104,6 +102,7 @@ async def get_book(
         'content':content.push_text(), 
         'menu':menu,
         'tags':[i.tag for i in res],
-        'book':data
+        'book':data,
+        "menu_data":choice_from_menu
         }  # Context data
     )

@@ -1,9 +1,12 @@
-from datetime import datetime
-from pydantic import BaseModel, PostgresDsn
+from fastapi import Request
 from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic import BaseModel, PostgresDsn
+from datetime import datetime
 from pathlib import Path
 import logging
 import os
+
+from src.core.urls import menu_items
 
 
 logger = logging.getLogger(__name__)
@@ -28,6 +31,8 @@ refresh_token_expire:int = 60*24*7 # minutes
 refresh_time:int = 5 # refresh each 15 minutes 20 - 5 = 15
 per_page:int = 2
 
+
+menu = menu_items
 
 
 if os.path.exists(media_root) == False:

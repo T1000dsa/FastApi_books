@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 <title>{{ book.title }}</title>
 {% block content %}
-<a href="/books/1">Back</a><br>
+<a href="{{menu_data('Books').url}}">Back</a><br>
 <form action="/action/edit_book/{{ book.id }}" method="post">
     <button>Edit</button><br>
 </form>

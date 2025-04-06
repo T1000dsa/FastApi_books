@@ -11,6 +11,7 @@
 # TODO2 Pagination in database and in html [1, 1, 1, 1, 1] custom paginator
 # TODO3 Main page [0, 1, 1, 1, 1] html+jinja2
 # TODO4 Cache [1, 1, 1, 1, 1] Redis
+# TODOEXTRA ...
 # TODOEXTRA Make automatic books download
 # TODO5 Celery [0, 0, 0, 0, 0]
 # TODO6 Rabbidmq or Kafka [0, 0, 0, 0, 0]
@@ -24,11 +25,11 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 import logging 
 
-from src.api.api_v1.endpoints.routers import router as main_router
-from  src.api.api_v1.endpoints.routers_core import router as core_router
-from src.api.api_v1.auth.autentification import router as users_router
+from src.api.api_current.endpoints.routers import router as main_router
+from  src.api.api_current.endpoints.routers_core import router as core_router
+from src.api.api_current.auth.autentification import router as users_router
 from src.core.middlewares.users import init_token_refresh_middleware
-from src.api.api_v1.auth.config import securityAuthx
+from src.api.api_current.auth.config import securityAuthx
 from src.core.database.db_helper import db_helper
 
 

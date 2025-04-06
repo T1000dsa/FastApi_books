@@ -5,7 +5,7 @@ from fastapi import  HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.config import logger
-from src.core.database.models.models import BookModelOrm, TagsModelOrm, TagsOnBookOrm
+from src.core.database.models.models import BookModelOrm, TagsModelOrm, TagsOnBookOrm, Base
 from src.core.schemes import BookModelPydantic, TagsModelPydantic
 from src.core.config import per_page
 
@@ -139,15 +139,7 @@ async def drop_object(
         await session.commit()
 
     if drop_id is None and data is not None:
-        if data == BookModelPydantic:
-            statement = (delete(BookModelOrm))
-            await session.execute(statement)
-                
-        elif data == TagsModelPydantic:
-            statement = (delete(TagsModelOrm))
-            await session.execute(statement)
-
-        await session.commit()
+        await session.run_sync(Base.metadata.drop_all())
 
     #if drop_id is None and data is None:
     #    async with async_engine.begin() as conn:
@@ -173,9 +165,9 @@ async def output_data(
 
 async def select_data_book(
         session:AsyncSession,
-        data:int
+        data:str
         ):
-    query = select(BookModelOrm).where(BookModelOrm.id==int(data))
+    query = select(BookModelOrm).where(BookModelOrm.title==data)
     res = await session.execute(query)
     result = res.scalar_one_or_none()
     return result

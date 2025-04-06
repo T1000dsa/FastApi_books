@@ -8,12 +8,12 @@ from typing import Annotated
 import logging
 
 from src.core.utils import get_list, book_process
-from src.api.api_v1.orm.db_orm import ( drop_object, insert_data, update_data, select_data_tag, select_data_book)
+from src.api.api_current.orm.db_orm import ( drop_object, insert_data, update_data, select_data_tag, select_data_book)
 from src.core.schemes import BookModelPydantic, TagsModelPydantic
-from src.core.services import TextLoad
+from src.services.TextLoad import TextLoad
 from src.core.database.db_helper import db_helper
 from src.core.config import frontend_root
-from src.api.api_v1.auth.config import securityAuthx
+from src.api.api_current.auth.config import securityAuthx
 from src.core.config import menu
 from src.core.urls import choice_from_menu
 
@@ -21,11 +21,6 @@ from src.core.urls import choice_from_menu
 router = APIRouter(prefix='/action')
 logger = logging.getLogger(__name__)
 templates = Jinja2Templates(directory=frontend_root)
-
-@router.post('/create', tags=['init'])
-async def create_db_data(session:Annotated[AsyncSession, Depends(db_helper.session_getter)]):
-    await drop_object(session)
-    return {'msg':'Tables were created'}
 
 @router.post('/insert/book', tags=['books'])
 async def insert_db_data_book(
@@ -43,10 +38,16 @@ async def insert_db_data_tag(
     
 
 @router.delete('/delete/book/{book_id}', tags=['books'])
-async def drop_db_data_book(
+async def drop_db_data_book_id(
     session:Annotated[AsyncSession, Depends(db_helper.session_getter)],
     book_id:int):
     await drop_object(session, BookModelPydantic, drop_id=book_id)
+    return {'msg':'Book was deleted'}
+
+@router.delete('/delete/book/', tags=['books'])
+async def drop_db_data_book(
+    session:Annotated[AsyncSession, Depends(db_helper.session_getter)]):
+    await drop_object(session, BookModelPydantic)
     return {'msg':'Book was deleted'}
 
 
@@ -99,6 +100,7 @@ async def postdata_book(
     title=Form(), 
     author=Form(),
     text_hook:UploadFile=File(),
+    year=File(),
     tags:list[str]=Form(default=[])
         ):
 
@@ -109,6 +111,7 @@ async def postdata_book(
         "title": title, 
         "author": author,
         "text_hook":local,
+        'year':year,
         "tags":result,
         "menu_data":choice_from_menu
         }

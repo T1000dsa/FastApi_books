@@ -6,7 +6,7 @@ from src.core.config import (ACCESS_TYPE, REFRESH_TYPE, refresh_token_expire, ac
 
 templates_users = Jinja2Templates(directory=frontend_root)
 config = AuthXConfig(
-    JWT_ALGORITHM = "HS256",
+    JWT_ALGORITHM = settings.jwt_key.algorithm,
     JWT_SECRET_KEY=settings.jwt_key.key,
     JWT_ACCESS_COOKIE_NAME = ACCESS_TYPE,
     JWT_REFRESH_COOKIE_NAME = REFRESH_TYPE,

@@ -5,10 +5,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from typing import Annotated, Optional
 import logging
 
-from src.api.api_v1.auth.user_scheme import User
-from src.api.api_v1.orm.user_orm import select_data_user, insert_data
+from src.api.api_current.auth.user_scheme import User
+from src.api.api_current.orm.user_orm import select_data_user, insert_data
 from src.core.database.db_helper import db_helper
-from src.api.api_v1.auth.config import templates_users, securityAuthx
+from src.api.api_current.auth.config import templates_users, securityAuthx
 from src.core.config import (ACCESS_TYPE, REFRESH_TYPE, menu)
 from src.core.urls import choice_from_menu
 

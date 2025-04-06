@@ -3,8 +3,8 @@ from sqlalchemy import select, update, delete, join
 from typing import Union, Optional
 import logging
 
-from src.api.api_v1.auth.user_models import UserModel
-from src.api.api_v1.auth.user_scheme import User as User_pydantic
+from src.api.api_current.auth.user_models import UserModel
+from src.api.api_current.auth.user_scheme import User as User_pydantic
 
 
 logger = logging.getLogger(__name__)

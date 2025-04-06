@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from uuid import uuid4
 import os
 
-from src.api.api_v1.orm.db_orm import (output_data, select_data_book)
+from src.api.api_current.orm.db_orm import (output_data, select_data_book)
 from src.core.config import max_file_size, media_root
 
 
@@ -17,7 +17,7 @@ class Choice:
         return output_data(self.session, self.choice)
     
 class Select:
-    def __init__(self, select_id:int, session:AsyncSession):
+    def __init__(self, select_id:str, session:AsyncSession):
         self.select_id = select_id
         self.session = session
     def get_obj(self):

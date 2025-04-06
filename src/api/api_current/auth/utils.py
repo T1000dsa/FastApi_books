@@ -8,8 +8,8 @@ import logging
 import jwt
 
 from src.core.config import ACCESS_TYPE, REFRESH_TYPE, access_token_expire, refresh_time
-from src.api.api_v1.orm.user_orm import select_data_user
-from src.api.api_v1.auth.config import securityAuthx
+from src.api.api_current.orm.user_orm import select_data_user
+from src.api.api_current.auth.config import securityAuthx
 from src.core.database.db_helper import db_helper
 
 
@@ -51,7 +51,7 @@ async def refresh_logic(
         should = should_refresh_access_token(request)
         if should:
             # Create new access token
-            logger.debug('Before create_access_token')
+            #logger.debug('Before create_access_token')
             
             return securityAuthx.create_access_token(
                     **{'uid': str(user_data.id)}

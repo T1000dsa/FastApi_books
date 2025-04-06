@@ -1,27 +1,25 @@
 from fastapi import APIRouter, Request, HTTPException, Response, Depends
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import Annotated
 import logging
 
-
 from src.core.utils import get_list, get_select
-from src.api.api_v1.orm.db_orm import select_data_tag, paginator, output_data
-from src.core.config import per_page, frontend_root
+from src.api.api_current.orm.db_orm import select_data_tag
+from src.core.config import frontend_root
 from src.core.database.db_helper import db_helper
-from src.api.api_v1.auth.config import securityAuthx
+from src.api.api_current.auth.config import securityAuthx
 from src.core.config import menu
 from src.core.urls import choice_from_menu
 from src.core.redis.books_cache import BookCacheService
+from src.api.api_current.endpoints.services.paginator_helper import get_paginated_books
 
 
 router = APIRouter()
 
-
 templates = Jinja2Templates(directory=frontend_root)
 logger = logging.getLogger(__name__)
-
 
 @router.get("/", response_class=HTMLResponse, tags=['root'])
 async def read_root(request: Request):
@@ -38,38 +36,28 @@ async def read_root(request: Request):
     )
     return response
 
+@router.get("/books", dependencies=[Depends(securityAuthx.access_token_required)])
 @router.get("/books/{page}", dependencies=[Depends(securityAuthx.access_token_required)])
 async def get_books(
-    request:Request,
-    page: int=1,
-    session: AsyncSession = Depends(db_helper.session_getter)
-
+    request: Request,
+    session: AsyncSession = Depends(db_helper.session_getter),
+    page: int = 1
 ):
+    
     try:
         # Proper pagination query
-        paginated_books = await paginator(session, page)
-        all_books = await output_data(session)
-        lenght_data = (len(all_books) / per_page)
-
-        if str(lenght_data).split('.')[1] != '0':
-            lenght_data = int(lenght_data+1)
-
-
-        data = {
-            'current_page':page,
-            'total_pages':lenght_data
-        }
+        data, paginated_books = await get_paginated_books(session, page)
         
         return templates.TemplateResponse(
-        "get_books.html",  # Template name
+        "get_books.html",
         {
         "request": request, 
-        'description':'Good reading!',
+        'description':'Choice the book!',
         'menu':menu,
         "books":paginated_books,
         "data":data,
         "menu_data":choice_from_menu
-        }  # Context data
+        }
     )
     except Exception as e:
         logger.error(f"Error fetching books: {e}")
@@ -82,25 +70,26 @@ async def get_tags(session:Annotated[AsyncSession, Depends(db_helper.session_get
     return {'msg':'Data was gaved', 'data':tags_data}
 
 
-@router.get("/book/{book_id}", tags=['books'])
+@router.get("/books/{page}/book/{book_title}", tags=['books'], dependencies=[Depends(securityAuthx.access_token_required)])
 async def get_book(
     session: Annotated[AsyncSession, Depends(db_helper.session_getter)],
     request: Request, 
-    book_id: int
+    book_title: str,
+    page:int
 ):
     # Get book data
-    get_select_data = get_select(select_id=book_id, session=session)
+    get_select_data = get_select(select_id=book_title, session=session)
     book_data = await get_select_data.get_obj()
-    
+
+    # Get Page data
+    data, _ = await get_paginated_books(session)
+    data['current_page'] = page
+   
     # Get content (automatically handles cache)
     content = await BookCacheService.get_book_text(book_data)
     
     # Log cache stats
-    cache_stats = await BookCacheService.get_cache_stats()
-    logger.info(
-        f"Cache stats - Memory: {cache_stats['memory_used']}, "
-        f"Hit Rate: {cache_stats['hit_rate']}"
-    )
+    await BookCacheService.get_cache_stats()
 
     # Get tags
     res = await select_data_tag(session, book_data)
@@ -114,6 +103,7 @@ async def get_book(
             "menu": menu,
             "tags": [i.tag for i in res],
             "book": book_data,
-            "menu_data": choice_from_menu
+            "menu_data": choice_from_menu,
+            "data":data
         }
     )

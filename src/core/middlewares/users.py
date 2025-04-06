@@ -1,7 +1,7 @@
 from fastapi import FastAPI, Request
 import logging
 
-from src.api.api_v1.auth.utils import refresh_logic, clear_tokens_and_redirect
+from src.api.api_current.auth.utils import refresh_logic, clear_tokens_and_redirect
 from src.core.config import (ACCESS_TYPE, REFRESH_TYPE)
 
 
@@ -34,7 +34,7 @@ def init_token_refresh_middleware(app: FastAPI):
             try:
                 new_token = await refresh_logic(request)
                 if new_token:
-                    logger.debug('before set cookies')
+                    #logger.debug('before set cookies')
                     response = await call_next(request)
                     response.set_cookie(
                                 key=ACCESS_TYPE,
@@ -44,7 +44,7 @@ def init_token_refresh_middleware(app: FastAPI):
                                 samesite="lax",
                                 path="/"
                             )
-                    logger.debug('after set cookies')
+                    #logger.debug('after set cookies')
                     return response
                 else:
                     logger.debug('Continue')

@@ -32,7 +32,6 @@ refresh_time:int = 5 # refresh each 15 minutes 20 - 5 = 15
 per_page:int = 2
 
 menu = menu_items
-redis = Redis()
 
 if os.path.exists(media_root) == False:
     os.makedirs(media_root, exist_ok=True)
@@ -62,6 +61,7 @@ class Mode(BaseModel):
 
 class Jwt(BaseModel):
     key:str
+    algorithm:str
 
 
 class DatabaseConfig(BaseModel): 
@@ -73,6 +73,12 @@ class DatabaseConfig(BaseModel):
 
 
 class RedisSettings(BaseModel):
+    host:str='localhost'
+    port:int=6379
+    db:int=0
+
+
+class RedisCache(BaseModel):
     REDIS_CACHE_TTL_BOOKS: timedelta = timedelta(hours=1) #86400  # Default: 24h (in seconds)
     REDIS_CACHE_TTL_SESSIONS: timedelta = timedelta(hours=1)  # Sessions expire in 1h
 
@@ -89,6 +95,12 @@ class Settings(BaseSettings):
     mode: Mode = Mode()  # Default provided
     db: DatabaseConfig
     jwt_key: Jwt 
-    cache: RedisSettings = RedisSettings()
+    redis_settings: RedisSettings = RedisSettings()
+    redis_cache: RedisCache = RedisCache()
 
 settings = Settings()
+redis = Redis(
+    host=settings.redis_settings.host, 
+    port=settings.redis_settings.port,
+    db=settings.redis_settings.db
+)

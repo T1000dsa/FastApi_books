@@ -3,8 +3,9 @@ from sqlalchemy import engine_from_config
 from sqlalchemy import pool
 from alembic import context
 
-from src.database_data.settings import get_db_url_async
-from src.database_data.models.models import Base, BookModelOrm, TagsModelOrm, TagsOnBookOrm
+from src.core.config import settings
+from src.core.database.models.models import Base, BookModelOrm, TagsModelOrm, TagsOnBookOrm
+from src.api.api_v1.auth.user_models import UserModel
 # alembic revision --autogenerate
 # alembic upgrade head
 
@@ -13,8 +14,9 @@ config = context.config
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
-url = get_db_url_async()
-config.set_main_option('sqlalchemy.url', url + '?async_fallback=True') # + '?async_fallback=True'
+url = settings.db.url
+
+config.set_main_option('sqlalchemy.url', str(url) + '?async_fallback=True') # + '?async_fallback=True'
 
 target_metadata = Base.metadata
 

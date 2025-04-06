@@ -1,14 +1,17 @@
 {% extends 'base.html' %}
 <title>{{ book.title }}</title>
 {% block content %}
-<a href="{{menu_data('Books').url}}">Back</a><br>
-<form action="/action/edit_book/{{ book.id }}" method="post">
-    <button>Edit</button><br>
-</form>
-<form action="/action/delete_book/{{ book.id }}" method="get">
-    <button>Delete</button><br>
-</form>
-<h1>{{ book.title }}</h1>
+<!-- Your existing book list display -->
+<a href="{{menu_data('Books').url}}/{{data.current_page}}">Back</a><br>
+{% for book in books %}
+    <div class="book">
+        <h2>{{ book.title }}</h2>
+        <!-- other book details -->
+    </div>
+{% endfor %}
+
+<!-- Your existing pagination controls again at the bottom -->
+<div class="pagination">
 {% for tag in tags %}
     {{ tag }}
 {% endfor %}

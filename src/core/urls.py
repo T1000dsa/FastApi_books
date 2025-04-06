@@ -7,7 +7,7 @@ MenuItem = namedtuple('MenuItem', ['title', 'url']) # ['title', 'url', 'visible'
 menu_items = [
     MenuItem('Home', '/'),
     MenuItem('Docs', '/docs'),
-    MenuItem('Books', '/books/1'),
+    MenuItem('Books', '/books'),
     MenuItem('Add Book', '/action/add_book'),
     MenuItem('Add Tag', '/action/add_tag'),
     MenuItem('Profile', '/profile'),
@@ -25,7 +25,6 @@ def choice_from_menu(name:str=None):
         for i in menu_items:
             if name.lower() == i.title.lower() or name.lower() == i.url.lower():
                 return i
-print(choice_from_menu('Logout'))
 # Add new item easily
 #menu_items.append(MenuItem('Dashboard', '/dashboard', True, 'authenticated'))
 

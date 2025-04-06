@@ -1,10 +1,9 @@
 import logging
 import gzip
-from typing import Optional
 
 from src.core.config import redis, settings
 from src.core.database.models.models import BookModelOrm
-from src.core.services import TextLoad
+from src.services.TextLoad import TextLoad
 
 
 logger = logging.getLogger(__name__)
@@ -31,7 +30,7 @@ class BookCacheService:
     async def _cache_book_text(key: str, content: str) -> None:
         """Store book text in cache with compression."""
         compressed = gzip.compress(content.encode())
-        await redis.set(key, compressed, ex=settings.cache.REDIS_CACHE_TTL_BOOKS)
+        await redis.set(key, compressed, ex=settings.redis_cache.REDIS_CACHE_TTL_BOOKS)
 
     @staticmethod
     async def get_cache_stats() -> dict:
@@ -42,10 +41,20 @@ class BookCacheService:
         hits = stats["keyspace_hits"]
         misses = stats["keyspace_misses"]
         hit_rate = hits / (hits + misses) if (hits + misses) > 0 else 0
+        logger.info(
+        f"Cache stats - Memory: {memory_info['used_memory_human']} "
+        f"Hit Rat: {hit_rate:.2%} "
+        f"hits: {hits} "
+        f"misses: {hit_rate:.2%} "
+    )
         
-        return {
-            "memory_used": memory_info["used_memory_human"],
-            "hit_rate": f"{hit_rate:.2%}",
-            "hits": hits,
-            "misses": misses
-        }
+    @staticmethod
+    async def get_page_to_user(key:str) -> int|None:
+        data = await redis.get(key)
+        if data:
+            return data
+        return 
+    
+    @staticmethod
+    async def set_page_to_user(key:str, page:int) -> None:
+        await redis.set(key, page)

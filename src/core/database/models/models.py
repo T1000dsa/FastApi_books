@@ -1,15 +1,16 @@
 from src.core.database.models.base import Base, int_pk, created_at, updated_at, str_uniq
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy import ForeignKey
+from datetime import date
 import slugify
 
 class BookModelOrm(Base):
     __tablename__ = 'books'
 
     id:Mapped[int_pk]
-    title:Mapped[str_uniq]
+    title:Mapped[str_uniq] = mapped_column(index=True)
     author:Mapped[str|None]
-    slug:Mapped[str]
+    year:Mapped[date|None]
     created_at:Mapped[created_at]
     updated_at:Mapped[updated_at]
     text_hook:Mapped[str|None]
@@ -20,9 +21,6 @@ class BookModelOrm(Base):
         secondary="tagsinbooks", 
         )
     
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        self.slug = slugify.slugify(self.title)
 
     def __set_tags__(self, new):
         self.tag_books=new

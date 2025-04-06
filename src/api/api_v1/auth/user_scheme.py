@@ -1,7 +1,4 @@
-from pydantic import BaseModel, Field
-from datetime import datetime
-from pydantic import BaseModel, EmailStr, Field, field_validator, model_validator, ValidationInfo, validate_email
-from typing import Optional
+from pydantic import BaseModel, field_validator, model_validator
 
 
 class User(BaseModel):

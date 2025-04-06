@@ -1,5 +1,5 @@
 from fastapi.templating import Jinja2Templates
-from authx import AuthX, AuthXConfig, RequestToken
+from authx import AuthX, AuthXConfig
 from datetime import timedelta
 
 from src.core.config import (ACCESS_TYPE, REFRESH_TYPE, refresh_token_expire, access_token_expire, settings, frontend_root)

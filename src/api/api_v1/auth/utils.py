@@ -20,11 +20,11 @@ async def refresh_logic(
         request: Request, 
         ) -> Optional[str]:
     """Core refresh logic using refresh token"""
-    logger.debug('in refresh_logic')
+    #logger.debug('in refresh_logic')
     try:
         refresh_token = request.cookies.get(REFRESH_TYPE)
         if not refresh_token:
-            logger.debug("No refresh token found")
+            logger.info("No refresh token found")
             return None # Better to raise exception or redirect to login
                 
             # Verify refresh token
@@ -38,14 +38,14 @@ async def refresh_logic(
         )
             
         if not payload:
-            logger.debug("Invalid refresh token")
+            logger.info("Invalid refresh token")
             return None
                 
             # Get user data
         async with db_helper.session_factory() as session:
             user_data = await select_data_user(session, int(payload.sub))
             if not user_data:
-                logger.debug("User not found")
+                logger.info("User not found")
                 return None
         
         should = should_refresh_access_token(request)
@@ -69,20 +69,20 @@ def should_refresh_access_token(request: Request) -> bool:
         #return True
         
     try:
-        logger.debug('in should_refresh_access_token')
+        #logger.debug('in should_refresh_access_token')
         payload = jwt.decode(access_token, options={"verify_signature": False})
         exp_time = datetime.fromtimestamp(payload['exp']) # 18:30:30
         remaining = (exp_time - datetime.now()) # 18:30:30 - 18:28:00 = 2:30 
 
-        logger.debug('Successfuly return True')
+        #logger.debug('Successfuly return True')
         return timedelta(minutes=refresh_time).seconds > remaining.seconds # True ; 1:00 < 2:30 -> False ; 1:00 > 0:44
     
     except jwt.ExpiredSignatureError:
-        logger.debug('Access token expired')
+        logger.info('Access token expired')
         return True
     
     except Exception as err:
-        logger.debug(f'Something went wrong {err}')
+        logger.error(f'Something went wrong {err}')
         raise err
 
 

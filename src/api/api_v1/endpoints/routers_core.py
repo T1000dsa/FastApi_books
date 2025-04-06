@@ -4,9 +4,7 @@ from fastapi.templating import Jinja2Templates
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import UploadFile, File, Form
-from uuid import uuid4
 from typing import Annotated
-import asyncio
 import logging
 
 from src.core.utils import get_list, book_process

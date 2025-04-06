@@ -1,7 +1,7 @@
-from fastapi import Request
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from pydantic import BaseModel, PostgresDsn
-from datetime import datetime
+from redis.asyncio import Redis
+from datetime import datetime, timedelta
 from pathlib import Path
 import logging
 import os
@@ -31,9 +31,8 @@ refresh_token_expire:int = 60*24*7 # minutes
 refresh_time:int = 5 # refresh each 15 minutes 20 - 5 = 15
 per_page:int = 2
 
-
 menu = menu_items
-
+redis = Redis()
 
 if os.path.exists(media_root) == False:
     os.makedirs(media_root, exist_ok=True)
@@ -73,6 +72,11 @@ class DatabaseConfig(BaseModel):
     max_overflow: int = 10
 
 
+class RedisSettings(BaseModel):
+    REDIS_CACHE_TTL_BOOKS: timedelta = timedelta(hours=1) #86400  # Default: 24h (in seconds)
+    REDIS_CACHE_TTL_SESSIONS: timedelta = timedelta(hours=1)  # Sessions expire in 1h
+
+
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
         env_nested_delimiter='__',
@@ -85,5 +89,6 @@ class Settings(BaseSettings):
     mode: Mode = Mode()  # Default provided
     db: DatabaseConfig
     jwt_key: Jwt 
+    cache: RedisSettings = RedisSettings()
 
 settings = Settings()

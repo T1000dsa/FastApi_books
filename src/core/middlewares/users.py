@@ -1,9 +1,8 @@
-from fastapi import FastAPI, Depends, Request
+from fastapi import FastAPI, Request
 import logging
 
-from src.api.api_v1.auth.utils import refresh_logic, clear_tokens_and_redirect, should_refresh_access_token
-from src.core.config import (ACCESS_TYPE, REFRESH_TYPE, access_token_expire)
-from src.core.database.db_helper import db_helper
+from src.api.api_v1.auth.utils import refresh_logic, clear_tokens_and_redirect
+from src.core.config import (ACCESS_TYPE, REFRESH_TYPE)
 
 
 logger = logging.getLogger(__name__)
@@ -13,17 +12,16 @@ def init_token_refresh_middleware(app: FastAPI):
     async def auto_refresh_token(
         request: Request, 
         call_next):
-        logger.debug(f"Incoming request to: {request.url}")
+        logger.info(f"Incoming request to: {request.url}")
         # Skip auth for these paths
 
         public_paths = ['/login', '/register', '/static', '/docs', '/openapi.json']
         if any(request.url.path.startswith(path) for path in public_paths):
-            logger.debug(f'Middleware skipped the: {request.url.path}')
+            logger.info(f'Middleware skipped the: {request.url.path}')
             return await call_next(request)
         
         access_token = request.cookies.get(ACCESS_TYPE)
         refresh_token = request.cookies.get(REFRESH_TYPE)
-        logger.debug('Middleware got the tokens')
         
         # Case 1: No tokens at all - allow through to login
         if not access_token and not refresh_token:

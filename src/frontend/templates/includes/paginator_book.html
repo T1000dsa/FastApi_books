@@ -1,0 +1,12 @@
+{% block content %}
+
+<!-- No form needed; plain links work with GET -->
+{% if data_book.book_page > 1 %}
+    <a href="/books/{{data.current_page}}/book/{{book.title}}/{{ data_book.book_page - 1 }}">Previous</a>
+{% endif %}
+
+{% if data_book.book_page < data_book.book_page_all %}
+    <a href="/books/{{data.current_page}}/book/{{book.title}}/{{ data_book.book_page + 1 }}">Next</a>
+{% endif %}
+<nav>{{ data_book.book_page }}/{{ data_book.book_page_all }}</nav>
+{% endblock %}

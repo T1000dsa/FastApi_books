@@ -126,8 +126,8 @@ async def login_check(
         if data.username == username and data.check_password(password):
             
             user_data = {'uid':str(data.id)}
-            access_token = securityAuthx.create_access_token(**user_data).decode()
-            refresh_token = securityAuthx.create_refresh_token(**user_data).decode()
+            access_token = securityAuthx.create_access_token(**user_data)
+            refresh_token = securityAuthx.create_refresh_token(**user_data)
 
             response = RedirectResponse(url="/", status_code=303) 
             

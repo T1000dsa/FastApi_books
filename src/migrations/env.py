@@ -5,7 +5,7 @@ from alembic import context
 
 from src.core.config import settings
 from src.core.database.models.models import Base, BookModelOrm, TagsModelOrm, TagsOnBookOrm
-from src.api.api_v1.auth.user_models import UserModel
+from src.api.api_current.auth.user_models import UserModel
 # alembic revision --autogenerate
 # alembic upgrade head
 

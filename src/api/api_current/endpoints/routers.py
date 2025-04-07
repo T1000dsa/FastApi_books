@@ -9,11 +9,12 @@ from src.core.utils import get_list, get_select
 from src.api.api_current.orm.db_orm import select_data_tag
 from src.core.config import frontend_root
 from src.core.database.db_helper import db_helper
-from src.api.api_current.auth.config import securityAuthx
 from src.core.config import menu
 from src.core.urls import choice_from_menu
 from src.core.redis.books_cache import BookCacheService
 from src.api.api_current.endpoints.services.paginator_helper import get_paginated_books
+from src.api.api_current.auth.config import securityAuthx
+from src.services.Pagination_text import split_text_into_pages
 
 
 router = APIRouter()
@@ -56,7 +57,7 @@ async def get_books(
         'menu':menu,
         "books":paginated_books,
         "data":data,
-        "menu_data":choice_from_menu
+        "menu_data":choice_from_menu,
         }
     )
     except Exception as e:
@@ -69,24 +70,32 @@ async def get_tags(session:Annotated[AsyncSession, Depends(db_helper.session_get
     tags_data = (await get_list_data.get_obj())
     return {'msg':'Data was gaved', 'data':tags_data}
 
-
 @router.get("/books/{page}/book/{book_title}", tags=['books'], dependencies=[Depends(securityAuthx.access_token_required)])
+@router.get("/books/{page}/book/{book_title}/{book_page}", tags=['books'], dependencies=[Depends(securityAuthx.access_token_required)])
 async def get_book(
     session: Annotated[AsyncSession, Depends(db_helper.session_getter)],
     request: Request, 
     book_title: str,
-    page:int
+    page:int,
+    book_page:int=1
 ):
     # Get book data
     get_select_data = get_select(select_id=book_title, session=session)
     book_data = await get_select_data.get_obj()
 
+    content = await BookCacheService.get_book_text(book_data)
+    pages_pet_text, count = split_text_into_pages(content)
+
     # Get Page data
     data, _ = await get_paginated_books(session)
     data['current_page'] = page
-   
-    # Get content (automatically handles cache)
-    content = await BookCacheService.get_book_text(book_data)
+    print(book_page)
+    
+    data_book = {
+        'book_page':book_page,
+        'book_page_all':count
+    }
+
     
     # Log cache stats
     await BookCacheService.get_cache_stats()
@@ -99,11 +108,12 @@ async def get_book(
         {
             "request": request,
             "description": "Good reading!",
-            "content": content,
+            "content": pages_pet_text[book_page-1],#content,
             "menu": menu,
             "tags": [i.tag for i in res],
             "book": book_data,
             "menu_data": choice_from_menu,
-            "data":data
+            "data":data,
+            "data_book":data_book
         }
     )

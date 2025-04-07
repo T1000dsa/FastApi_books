@@ -16,6 +16,7 @@ from src.core.config import frontend_root
 from src.api.api_current.auth.config import securityAuthx
 from src.core.config import menu
 from src.core.urls import choice_from_menu
+from src.api.api_current.endpoints.services.paginator_helper import get_paginated_books
 
 
 router = APIRouter(prefix='/action')
@@ -179,9 +180,13 @@ async def delete_all(session:Annotated[AsyncSession, Depends(db_helper.session_g
 async def update_book_render(
     session:Annotated[AsyncSession, Depends(db_helper.session_getter)],
     request:Request,
-    book_id:int):
+    book_id:int,
+    page:int=1
+    ):
 
     book_obj = await select_data_book(session, book_id)
+    data, _ = await get_paginated_books(session)
+    data['current_page'] = page
 
     return templates.TemplateResponse(
         "book_edit.html",  # Template name
@@ -189,7 +194,8 @@ async def update_book_render(
         "request": request, 
         'menu':menu,
         'book':book_obj,
-        "menu_data":choice_from_menu
+        "menu_data":choice_from_menu,
+        "data":data
         }  # Context data
     )
 
@@ -201,9 +207,14 @@ async def update_book(
     title: str = Form(...),
     author: str = Form(...),
     text_hook: UploadFile = File(None),
-    tags: list[str] = Form([])
+    year = Form(...),
+    tags: list[str] = Form([]),
+    page:int=1
 ):
     try:
+            data, _ = await get_paginated_books(session)
+            data['current_page'] = page
+
             book = await select_data_book(session, book_id)
             if not book:
                 raise HTTPException(404, "Book not found")
@@ -218,12 +229,14 @@ async def update_book(
                 "author":author,
                 "text_hook":text_path,
                 "tags":tags,
-                "menu_data":choice_from_menu
+                "year":year,
+                "menu_data":choice_from_menu,
+                "data":data
             }   
             
             result = await update_data(session, book_id, BookModelPydantic(**insert))
             logger.debug(result.title)
-            return RedirectResponse(f"/book/{book_id}", status_code=303)
+            return RedirectResponse(f"/books/{page}/book/{title}", status_code=303)
             
     except Exception as e:
         raise HTTPException(400, str(e))
@@ -233,11 +246,16 @@ async def update_book(
 async def delete_book_id(
     session:Annotated[AsyncSession, Depends(db_helper.session_getter)],
     request:Request, 
-    book_id:int):
+    book_id:int,
+    page:int=1
+    ):
 
     book = await select_data_book(session, book_id)
     pull_len = TextLoad(book)
     text_data = pull_len.push_text()
+
+    data, _ = await get_paginated_books(session)
+    data['current_page'] = page
 
     return templates.TemplateResponse(
         "delete_book.html",
@@ -246,7 +264,8 @@ async def delete_book_id(
         'menu':menu,
         'book':book,
         'lost':len(text_data),
-        "menu_data":choice_from_menu
+        "menu_data":choice_from_menu,
+        "data":data
         }
     )
 

@@ -4,7 +4,7 @@ from datetime import datetime
 class BookModelPydantic(BaseModel):
     title:str
     author:str
-    year:datetime
+    #year:datetime|str|None = None
     #count:Mapped[int]
     #price:Mapped[int|None]
     text_hook:str|None

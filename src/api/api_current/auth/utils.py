@@ -20,7 +20,7 @@ async def refresh_logic(
         request: Request, 
         ) -> Optional[str]:
     """Core refresh logic using refresh token"""
-    #logger.debug('in refresh_logic')
+    logger.debug('in refresh_logic')
     try:
         refresh_token = request.cookies.get(REFRESH_TYPE)
         if not refresh_token:
@@ -51,11 +51,11 @@ async def refresh_logic(
         should = should_refresh_access_token(request)
         if should:
             # Create new access token
-            #logger.debug('Before create_access_token')
+            logger.debug('Before create_access_token')
             
             return securityAuthx.create_access_token(
                     **{'uid': str(user_data.id)}
-            ).decode()
+            )
         
         return None
     except Exception as e:
@@ -69,12 +69,12 @@ def should_refresh_access_token(request: Request) -> bool:
         #return True
         
     try:
-        #logger.debug('in should_refresh_access_token')
+        logger.debug('in should_refresh_access_token')
         payload = jwt.decode(access_token, options={"verify_signature": False})
         exp_time = datetime.fromtimestamp(payload['exp']) # 18:30:30
         remaining = (exp_time - datetime.now()) # 18:30:30 - 18:28:00 = 2:30 
 
-        #logger.debug('Successfuly return True')
+        logger.debug('Successfuly return True')
         return timedelta(minutes=refresh_time).seconds > remaining.seconds # True ; 1:00 < 2:30 -> False ; 1:00 > 0:44
     
     except jwt.ExpiredSignatureError:

@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 {% block content %}
-<a href="/book/{{ book.id }}" class="btn btn-secondary">Back</a>
+<a href="{{menu_data('Books').url}}/{{data.current_page}}">Back</a><br>
 <title>Edit {{ book.title }}!</title>
 <h1>Edit {{ book.title }}</h1>
 
@@ -16,6 +16,11 @@
         <input type="text" id="author" name="author" value="{{ book.author }}" required>
     </div>
 
+    <div class="mb-3"></div>
+        <label for="year">Year:</label>
+        <input type="date" id="year" name="year" value="{{ book.year }}"><br><br>
+    </div>
+
 
     <!-- File Upload (Show current file if exists) -->
     <div class="mb-3">
@@ -25,6 +30,7 @@
         {% endif %}
         <input type="file" class="form-control" id="text_hook" name="text_hook">
     </div>
+
 
     <!-- Tags Selection -->
     <div class="mb-3">

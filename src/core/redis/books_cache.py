@@ -45,7 +45,7 @@ class BookCacheService:
         f"Cache stats - Memory: {memory_info['used_memory_human']} "
         f"Hit Rat: {hit_rate:.2%} "
         f"hits: {hits} "
-        f"misses: {hit_rate:.2%} "
+        f"misses: {misses} "
     )
         
     @staticmethod

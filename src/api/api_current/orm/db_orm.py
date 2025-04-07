@@ -165,9 +165,15 @@ async def output_data(
 
 async def select_data_book(
         session:AsyncSession,
-        data:str
+        data:str|int
         ):
-    query = select(BookModelOrm).where(BookModelOrm.title==data)
+    
+    if isinstance(data, str):
+        query = select(BookModelOrm).where(BookModelOrm.title==data)
+        
+    if isinstance(data, int):
+        query = select(BookModelOrm).where(BookModelOrm.id==int(data))
+
     res = await session.execute(query)
     result = res.scalar_one_or_none()
     return result

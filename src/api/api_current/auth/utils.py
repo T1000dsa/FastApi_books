@@ -5,9 +5,10 @@ from authx import RequestToken
 from datetime import datetime, timedelta
 from typing import Optional, Annotated
 import logging
+from authx.exceptions import JWTDecodeError
 import jwt
 
-from src.core.config import ACCESS_TYPE, REFRESH_TYPE, access_token_expire, refresh_time
+from src.core.config import ACCESS_TYPE, REFRESH_TYPE
 from src.api.api_current.orm.user_orm import select_data_user
 from src.api.api_current.auth.config import securityAuthx
 from src.core.database.db_helper import db_helper
@@ -16,74 +17,80 @@ from src.core.database.db_helper import db_helper
 logger = logging.getLogger(__name__)
 
 
-async def refresh_logic(
-        request: Request, 
-        ) -> Optional[str]:
+async def refresh_logic(request: Request) -> Optional[str]:
     """Core refresh logic using refresh token"""
     logger.debug('in refresh_logic')
     try:
         refresh_token = request.cookies.get(REFRESH_TYPE)
+
         if not refresh_token:
             logger.info("No refresh token found")
-            return None # Better to raise exception or redirect to login
-                
-            # Verify refresh token
+            return None
+        
+        #if should_refresh_access_token(request):
+            # Verify refresh token (skip access token verification)
+
+        logger.debug('before token verification')
+
         payload = securityAuthx.verify_token(
-                RequestToken(
-                    token=refresh_token,
-                    location="cookies",
-                    type=REFRESH_TYPE
-                ),
-            verify_csrf=False
-        )
-            
+                    RequestToken(
+                        token=refresh_token,
+                        location="cookies",
+                        type=REFRESH_TYPE
+                    ),
+                    verify_csrf=False
+                )
+        logger.debug('after token verification')
+                
         if not payload:
             logger.info("Invalid refresh token")
             return None
-                
+                    
             # Get user data
         async with db_helper.session_factory() as session:
             user_data = await select_data_user(session, int(payload.sub))
             if not user_data:
                 logger.info("User not found")
                 return None
-        
-        should = should_refresh_access_token(request)
-        if should:
-            # Create new access token
-            logger.debug('Before create_access_token')
-            
-            return securityAuthx.create_access_token(
+        logger.debug('create_access_token')
+        return securityAuthx.create_access_token(
                     **{'uid': str(user_data.id)}
             )
         
-        return None
+
     except Exception as e:
         logger.error(f"Refresh failed: {e}")
         return None
 
-def should_refresh_access_token(request: Request) -> bool:
-    """More conservative refresh check"""
+def should_refresh_access_token(request: Request) -> bool: # Legacy-function
+
     access_token = request.cookies.get(ACCESS_TYPE)
-    #if not access_token: # access tokens now exists eternal but anyways expired so this row useless
-        #return True
-        
+
     try:
         logger.debug('in should_refresh_access_token')
-        payload = jwt.decode(access_token, options={"verify_signature": False})
-        exp_time = datetime.fromtimestamp(payload['exp']) # 18:30:30
-        remaining = (exp_time - datetime.now()) # 18:30:30 - 18:28:00 = 2:30 
+        payload = securityAuthx.verify_token(
+                    RequestToken(
+                        token=access_token,
+                        location="cookies",
+                        type=ACCESS_TYPE
+                    ),
+                    verify_csrf=False
+                )
+        exp_time = datetime.fromtimestamp(payload.exp.timestamp()) # 18:30:30
 
-        logger.debug('Successfuly return True')
-        return timedelta(minutes=refresh_time).seconds > remaining.seconds # True ; 1:00 < 2:30 -> False ; 1:00 > 0:44
+        remaining = (exp_time - datetime.now()).seconds # 18:30:30 - 18:28:00 = 2:30 
+        logger.debug(f'{timedelta(minutes=0).seconds} {remaining}')
+
+        return timedelta(seconds=0).seconds > remaining
     
-    except jwt.ExpiredSignatureError:
-        logger.info('Access token expired')
+    except (jwt.ExpiredSignatureError, JWTDecodeError) as err:
+        logger.error(f"Access token expired: {err}")
         return True
     
     except Exception as err:
         logger.error(f'Something went wrong {err}')
         raise err
+
 
 
 def clear_tokens_and_redirect() -> Response:

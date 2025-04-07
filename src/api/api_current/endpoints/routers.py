@@ -89,7 +89,6 @@ async def get_book(
     # Get Page data
     data, _ = await get_paginated_books(session)
     data['current_page'] = page
-    print(book_page)
     
     data_book = {
         'book_page':book_page,

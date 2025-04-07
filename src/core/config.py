@@ -28,8 +28,8 @@ REFRESH_TYPE = 'refresh'
 
 access_token_expire:int = 20 # minutes 
 refresh_token_expire:int = 60*24*7 # minutes 
-refresh_time:int = 5 # refresh each 15 minutes 20 - 5 = 15
-per_page:int = 2
+#refresh_time:int = 19 # refresh each 15 minutes 20 - 5 = 15
+per_page:int = 10
 
 menu = menu_items
 
@@ -65,11 +65,23 @@ class Jwt(BaseModel):
 
 
 class DatabaseConfig(BaseModel): 
-    url: PostgresDsn
+    url: PostgresDsn = None
     echo: bool = True
     echo_pool: bool = False
     pool_size: int = 5
     max_overflow: int = 10
+
+    name:str = None
+    user:str = None
+    password:str = None
+    host:str = 'postgres_host'
+    port:int = 5432
+
+    @property
+    def url(self) -> str:
+        """Construct the PostgreSQL connection URL"""
+        if self.url is None:
+            return f"postgresql+asyncpg://{self.user}:{self.password}@{self.host}:{self.port}/{self.name}"
 
 
 class RedisSettings(BaseModel):

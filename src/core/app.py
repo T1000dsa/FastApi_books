@@ -27,7 +27,7 @@ from fastapi import FastAPI
 import logging 
 
 from src.api.api_current.endpoints.routers import router as main_router
-from  src.api.api_current.endpoints.routers_core import router as core_router
+from src.api.api_current.endpoints.routers_core import router as core_router
 from src.api.api_current.auth.autentification import router as users_router
 from src.core.middlewares.users import init_token_refresh_middleware
 from src.api.api_current.auth.config import securityAuthx

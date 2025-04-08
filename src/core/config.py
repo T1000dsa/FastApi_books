@@ -74,12 +74,13 @@ class DatabaseConfig(BaseModel):
     name:str = None
     user:str = None
     password:str = None
-    host:str = 'postgres_host'
+    host:str = 'postgres'
     port:int = 5432
 
     @property
     def url(self) -> str:
         """Construct the PostgreSQL connection URL"""
+        logger.debug(self.url)
         if self.url is None:
             return f"postgresql+asyncpg://{self.user}:{self.password}@{self.host}:{self.port}/{self.name}"
 

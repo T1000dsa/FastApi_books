@@ -1,22 +1,22 @@
 {% for item in menu %}
     {% if item.title=='Login' %}
-        {% if request.cookies=={} %}
+        {% if request.cookies.get('access')==None %}
             <nav><a href="{{item.url}}">{{ item.title }}</a></nav>
         {% endif %}
 
 
     {% elif item.title=='Registration' %}
-        {% if request.cookies=={} %}
+        {% if request.cookies.get('access')==None %}
             <nav><a href="{{item.url}}">{{ item.title }}</a></nav>
         {% endif %}
 
     {% elif item.title=='Logout' %}
-        {% if request.cookies %}
+        {% if request.cookies.get('access') %}
             <nav><a href="{{menu_data('Logout').url}}">Logout</a></nav>
         {% endif %}
 
     {% elif item.title=='Profile' %}
-        {% if request.cookies %}
+        {% if request.cookies.get('access') %}
             <nav><a href="{{menu_data('Profile').url}}">Profile</a></nav>
         {% endif %}
 

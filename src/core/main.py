@@ -7,6 +7,7 @@
 # git ls-files | xargs wc -l
 # pip install -r requirements.txt
 # docker system prune -a --volumes --force && docker rm -f $(docker ps -aq) && docker rmi -f $(docker images -aq) && docker volume rm $(docker volume ls -q)
+# docker-compose --env-file src/core/.env up -d
 # python -m uvicorn src.core.main:app --reload
 # TODO1 Autorize and autentification [1, 1, 1, 1, 1] Auth On authx
 # TODO2 Pagination in database and in html [1, 1, 1, 1, 1] custom paginator

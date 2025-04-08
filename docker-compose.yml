@@ -1,34 +1,54 @@
 services:
   web:
     build: .
-    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    command: >
+        bash -c "alembic upgrade head &&
+        uvicorn src.core.main:app --host 0.0.0.0 --port 8000 --reload"
     volumes:
-      - .:/app
+      - ./src:/app/src
+    working_dir: /app
     ports:
       - "1341:8000"
-    env_file:
-      - ./src/core/.env
+    environment:
+      - FAST__DB__HOST=postgres
+      - FAST__DB__PORT=5432
+      - FAST__DB__NAME=${FAST__DB__NAME}
+      - FAST__DB__USER=${FAST__DB__USER}
+      - FAST__DB__PASSWORD=${FAST__DB__PASSWORD}
     depends_on:
-      - postgres
-      - redis
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     restart: unless-stopped
 
   postgres:
-    image: postgres:13-alpine
+    image: postgres:13.20
     environment:
-      FAST__DB__NAME: ${FAST__DB__NAME}
-      FAST__DB__USER: ${FAST__DB__USER}
-      FAST__DB__PASSWORD: ${FAST__DB__PASSWORD}
+      - POSTGRES_DB=${FAST__DB__NAME}
+      - POSTGRES_USER=${FAST__DB__USER}
+      - POSTGRES_PASSWORD=${FAST__DB__PASSWORD}
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
+      - ./alembic:/docker-entrypoint-initdb.d
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${FAST__DB__USER} -d ${FAST__DB__NAME}"]
       interval: 5s
       timeout: 5s
       retries: 5
-
+      
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=${PGADMIN_DEFAULT_EMAIL:-admin@admin.com}
+      - PGADMIN_DEFAULT_PASSWORD=${FAST__DB__PASSWORD}
+    ports:
+      - "5050:80"
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    depends_on:
+      - postgres
+    
   redis:
     image: redis:6-alpine
     ports:
@@ -44,3 +64,4 @@ services:
 volumes:
   postgres_data:
   redis_data:
+  pgadmin_data:

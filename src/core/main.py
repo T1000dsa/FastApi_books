@@ -21,22 +21,24 @@
 # TODO8 Mupltiply languages supporting [0, 0, 0, 0, 0]
 # TODO9 Recomendation [0, 0, 0, 0, 0]
 
-# global_TODO Deploy [0, 0, 0, 0, 1]
+# global_TODO Deploy [1, 1, 1, 1, 1] On docker
 
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 import logging 
+import uvicorn
 
 from src.api.api_current.endpoints.routers import router as main_router
 from src.api.api_current.endpoints.routers_core import router as core_router
 from src.api.api_current.auth.autentification import router as users_router
 from src.core.middlewares.users import init_token_refresh_middleware
 from src.api.api_current.auth.config import securityAuthx
-from src.core.database.db_helper import db_helper
+from src.core.database.db_helper import db_helper, settings
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    print(settings.db.url)  # Should show "db" as host
 
     yield
     
@@ -55,3 +57,11 @@ init_token_refresh_middleware(app)
 app.include_router(main_router)
 app.include_router(core_router)
 app.include_router(users_router)
+
+if __name__ == '__main__':
+    uvicorn.run(
+        'main:app',
+        host='0.0.0.0',
+        port=8000,
+        reload=True
+        )

@@ -1,67 +1,61 @@
 services:
-  web:
-    build: .
-    command: >
-        bash -c "alembic upgrade head &&
-        uvicorn src.core.main:app --host 0.0.0.0 --port 8000 --reload"
-    volumes:
-      - ./src:/app/src
-    working_dir: /app
-    ports:
-      - "1341:8000"
-    environment:
-      - FAST__DB__HOST=postgres
-      - FAST__DB__PORT=5432
-      - FAST__DB__NAME=${FAST__DB__NAME}
-      - FAST__DB__USER=${FAST__DB__USER}
-      - FAST__DB__PASSWORD=${FAST__DB__PASSWORD}
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-    restart: unless-stopped
 
-  postgres:
-    image: postgres:13.20
+  db:
+    container_name: postgresql_db
+    image: postgres:latest
+    restart: always
+    ports:
+      - 5432:5432
+    env_file:
+      - .env  # Explicitly load the .env file
     environment:
-      - POSTGRES_DB=${FAST__DB__NAME}
       - POSTGRES_USER=${FAST__DB__USER}
       - POSTGRES_PASSWORD=${FAST__DB__PASSWORD}
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-      - ./alembic:/docker-entrypoint-initdb.d
+      - POSTGRES_DB=${FAST__DB__NAME}
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${FAST__DB__USER} -d ${FAST__DB__NAME}"]
-      interval: 5s
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
       timeout: 5s
-      retries: 5
-      
+      retries: 10
+    volumes:
+      - db-data:/var/lib/postgresql/data
+
   pgadmin:
+    container_name: pgadmin
     image: dpage/pgadmin4:latest
     environment:
-      - PGADMIN_DEFAULT_EMAIL=${PGADMIN_DEFAULT_EMAIL:-admin@admin.com}
-      - PGADMIN_DEFAULT_PASSWORD=${FAST__DB__PASSWORD}
+      - PGADMIN_DEFAULT_EMAIL=someemail@gmail.come
+      - PGADMIN_DEFAULT_PASSWORD=somepassword
     ports:
-      - "5050:80"
-    volumes:
-      - pgadmin_data:/var/lib/pgadmin
+      - 5050:80
     depends_on:
-      - postgres
-    
-  redis:
-    image: redis:6-alpine
-    ports:
-      - "6379:6379"
+      - db
+  backend:
+    image: fastapi-container
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file:
+      - .env  # Explicitly load the .env file
+    environment:
+      - DB_HOST=db
+      - POSTGRES_USER=${FAST__DB__USER}
+      - POSTGRES_PASSWORD=${FAST__DB__PASSWORD}
+      - POSTGRES_DB=${FAST__DB__NAME}
+    container_name: app
+    command: bash -c "alembic upgrade head && uvicorn src.core.main:app --host 0.0.0.0 --port 8000 --reload"
     volumes:
-      - redis_data:/data
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 5s
-      timeout: 3s
-      retries: 5
+      - .:/app
+    ports:
+      - 8000:8000
+    restart: always
+
+  redis:
+    container_name: redis
+    image: redis:latest
 
 volumes:
-  postgres_data:
-  redis_data:
-  pgadmin_data:
+  db-data:

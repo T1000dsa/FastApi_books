@@ -1,5 +1,5 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
-from pydantic import BaseModel, PostgresDsn
+from pydantic import BaseModel, PostgresDsn, Field
 from redis.asyncio import Redis
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -20,7 +20,7 @@ max_file_size = 10 * 1024 * 1024
 base_dir = Path(__file__).parent.parent
 media_root = base_dir / "media_root" / datetime.now().date().strftime('%Y/%m/%d')
 frontend_root = base_dir / 'frontend' / 'templates'
-_core_env_file = base_dir / "core" / ".env"
+_core_env_file = base_dir / '.env'
 
 TOKEN_TYPE = "type"
 ACCESS_TYPE = 'access'
@@ -60,29 +60,30 @@ class Mode(BaseModel):
     mode:str='DEV'
 
 class Jwt(BaseModel):
-    key:str
-    algorithm:str
+    key:str='some-key-jwt-default'
+    algorithm:str='HS256'
 
 
 class DatabaseConfig(BaseModel): 
-    url: PostgresDsn = None
+    url: None|str = None
     echo: bool = True
     echo_pool: bool = False
     pool_size: int = 5
     max_overflow: int = 10
 
-    name:str = None
-    user:str = None
-    password:str = None
-    host:str = 'postgres'
-    port:int = 5432
+    name: str
+    user: str
+    password: str
+    host: str = 'db'
+    port: int = 5432
 
-    @property
-    def url(self) -> str:
-        """Construct the PostgreSQL connection URL"""
-        logger.debug(self.url)
+    def give_url(self):
         if self.url is None:
-            return f"postgresql+asyncpg://{self.user}:{self.password}@{self.host}:{self.port}/{self.name}"
+            self.url = f"postgresql+asyncpg://{self.user}:{self.password}@{self.host}:{self.port}/{self.name}"
+            return self.url
+        else:
+            return str(self.url)
+
 
 
 class RedisSettings(BaseModel):
@@ -101,13 +102,14 @@ class Settings(BaseSettings):
         env_nested_delimiter='__',
         env_prefix='FAST__',
         env_file=_core_env_file,
-        env_file_encoding='utf-8'
+        env_file_encoding='utf-8',
+        extra='ignore'
     )
-    run: RunConfig = RunConfig()
+    run: RunConfig = RunConfig()  # Keep defaults as fallback
     data: Current_ApiPrefix = Current_ApiPrefix()
-    mode: Mode = Mode()  # Default provided
+    mode: Mode = Mode()
     db: DatabaseConfig
-    jwt_key: Jwt 
+    jwt_key: Jwt = Jwt()
     redis_settings: RedisSettings = RedisSettings()
     redis_cache: RedisCache = RedisCache()
 
@@ -117,3 +119,4 @@ redis = Redis(
     port=settings.redis_settings.port,
     db=settings.redis_settings.db
 )
+settings.db.give_url()

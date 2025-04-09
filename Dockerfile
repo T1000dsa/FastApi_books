@@ -1,9 +1,21 @@
-FROM python:3.13.2
+FROM python:latest
 
+ENV PYTHONUNBUFFERED=1
 WORKDIR /app
 
+# First copy only requirements to cache pip install
+COPY requirements.txt .
+RUN pip install --upgrade pip && \
+    pip install -r requirements.txt
+
+# Then copy the rest
 COPY . .
 
-RUN pip install -r requirements.txt
+# Ensure the .env file is explicitly copied
+COPY .env .env
 
-CMD ["python", "main.py"]
+EXPOSE 8000
+
+# Add this to verify environment variables
+RUN echo "Environment variables in container:" && \
+    printenv

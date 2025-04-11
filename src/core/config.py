@@ -16,7 +16,8 @@ logging.basicConfig(
         format='%(filename)s:%(lineno)d #%(levelname)-8s '
                '[%(asctime)s] - %(name)s - %(message)s')
 
-max_file_size = 10 * 1024 * 1024
+max_file_size_mb = 10
+max_file_size = (1024**2)*max_file_size_mb
 base_dir = Path(__file__).parent.parent
 media_root = base_dir / "media_root" / datetime.now().date().strftime('%Y/%m/%d')
 frontend_root = base_dir / 'frontend' / 'templates'
@@ -82,8 +83,7 @@ class DatabaseConfig(BaseModel):
             self.url = f"postgresql+asyncpg://{self.user}:{self.password}@{self.host}:{self.port}/{self.name}"
             return self.url
         else:
-            return str(self.url)
-
+            return self.url
 
 
 class RedisSettings(BaseModel):
@@ -119,4 +119,5 @@ redis = Redis(
     port=settings.redis_settings.port,
     db=settings.redis_settings.db
 )
+
 settings.db.give_url()

@@ -25,7 +25,6 @@ logger = logging.getLogger(__name__)
 @router.get("/", response_class=HTMLResponse, tags=['root'])
 async def read_root(request: Request):
     response = Response()
-    print(request.cookies.get('access'))
 
     response = templates.TemplateResponse(
         'index.html',  # Template name

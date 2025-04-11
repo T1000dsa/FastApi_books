@@ -7,7 +7,8 @@ import logging
 import asyncio
 
 from src.core.config import frontend_root
-from src.services.BookDownloader import downloader
+from src.utils.BookDownloader import downloader
+
 
 router = APIRouter(prefix='/foreign')
 logger = logging.getLogger(__name__)

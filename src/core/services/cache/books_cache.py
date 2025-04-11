@@ -1,9 +1,10 @@
 import logging
 import gzip
 
-from src.core.config import redis, settings
-from src.core.database.models.models import BookModelOrm
-from src.services.TextLoad import TextLoad
+from src.core.config import settings
+from src.core.services.cache.redis_fastapi import redis
+from src.core.services.database.models.models import BookModelOrm
+from src.utils.TextLoad import TextLoad
 
 
 logger = logging.getLogger(__name__)

@@ -9,9 +9,9 @@ import logging
 
 from src.core.utils import get_list, book_process
 from src.api.api_current.orm.db_orm import ( drop_object, insert_data, update_data, select_data_tag, select_data_book)
-from src.core.schemes import BookModelPydantic, TagsModelPydantic
-from src.services.TextLoad import TextLoad
-from src.core.database.db_helper import db_helper
+from src.core.pydantic_schemas.schemas import BookModelPydantic, TagsModelPydantic
+from src.utils.TextLoad import TextLoad
+from src.core.services.database.db_helper import db_helper
 from src.core.config import frontend_root
 from src.api.api_current.auth.config import securityAuthx
 from src.core.config import menu

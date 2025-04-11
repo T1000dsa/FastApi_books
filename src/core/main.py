@@ -15,12 +15,12 @@
 # TODO4 Cache [1, 1, 1, 1, 1] Redis
 # TODOEXTRA Auto-Testing [0, 0, 0, 0, 1]
 # TODOEXTRA Make automatic books download [0, 0, 0, 0, 1]
-# TODO5 Celery [0, 0, 0, 0, 0]
-# TODO6 Rabbidmq or Kafka [0, 0, 0, 0, 0]
+# TODO5 Celery [0, 0, 0, 0, 1]
+# TODO6 Rabbidmq or Kafka [0, 0, 0, 0, 1]
 # TODO7 search engine [0, 0, 0, 0, 0]
 # TODO8 Mupltiply languages supporting [0, 0, 0, 0, 0]
 # TODO9 Recomendation [0, 0, 0, 0, 0]
-# TODO10 CI-CD [0, 0, 0, 0, 0]
+# TODO10 CI-CD [0, 0, 0, 0, 1]
 
 # global_TODO Deploy [1, 1, 1, 1, 1] On docker
 
@@ -34,7 +34,7 @@ from src.api.api_current.endpoints.routers_core import router as core_router
 from src.api.api_current.auth.autentification import router as users_router
 from src.api.api_current.endpoints.foreign_api import router as foreign_router
 from src.core.middlewares.users import init_token_refresh_middleware
-from src.core.database.db_helper import db_helper, settings
+from src.core.services.database.db_helper import db_helper, settings
 from src.api.api_current.auth.config import securityAuthx
 
 

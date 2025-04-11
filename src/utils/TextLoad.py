@@ -1,7 +1,7 @@
 import os
 from charset_normalizer import detect
 
-from src.core.database.models.models import BookModelOrm
+from src.core.services.database.models.models import BookModelOrm
 
 
 class TextLoad:

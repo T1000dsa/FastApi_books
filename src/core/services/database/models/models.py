@@ -1,4 +1,4 @@
-from src.core.database.models.base import Base, int_pk, created_at, updated_at, str_uniq
+from src.core.services.database.models.base import Base, int_pk, created_at, updated_at, str_uniq
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy import ForeignKey
 from datetime import date

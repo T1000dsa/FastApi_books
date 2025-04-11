@@ -2,7 +2,7 @@ from sqlalchemy.orm import Mapped, mapped_column
 import bcrypt
 from typing import Optional
 
-from src.core.database.models.base import Base, int_pk, created_at, updated_at
+from src.core.services.database.models.base import Base, int_pk, created_at, updated_at
 from src.core.config import logger
 
 

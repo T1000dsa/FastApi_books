@@ -5,8 +5,8 @@ from fastapi import  HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.config import logger
-from src.core.database.models.models import BookModelOrm, TagsModelOrm, TagsOnBookOrm, Base
-from src.core.schemes import BookModelPydantic, TagsModelPydantic
+from src.core.services.database.models.models import BookModelOrm, TagsModelOrm, TagsOnBookOrm, Base
+from src.core.pydantic_schemas.schemas import BookModelPydantic, TagsModelPydantic
 from src.core.config import per_page
 
 

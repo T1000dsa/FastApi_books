@@ -11,7 +11,7 @@ import jwt
 from src.core.config import ACCESS_TYPE, REFRESH_TYPE
 from src.api.api_current.orm.user_orm import select_data_user
 from src.api.api_current.auth.config import securityAuthx
-from src.core.database.db_helper import db_helper
+from src.core.services.database.db_helper import db_helper
 
 
 logger = logging.getLogger(__name__)

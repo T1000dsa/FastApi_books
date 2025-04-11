@@ -1,6 +1,5 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
-from pydantic import BaseModel, PostgresDsn, Field
-from redis.asyncio import Redis
+from pydantic import BaseModel
 from datetime import datetime, timedelta
 from pathlib import Path
 import logging
@@ -21,7 +20,7 @@ max_file_size = (1024**2)*max_file_size_mb
 base_dir = Path(__file__).parent.parent
 media_root = base_dir / "media_root" / datetime.now().date().strftime('%Y/%m/%d')
 frontend_root = base_dir / 'frontend' / 'templates'
-_core_env_file = base_dir / '.env'
+_core_env_file = Path(__file__).parent.parent.parent / '.env'
 
 TOKEN_TYPE = "type"
 ACCESS_TYPE = 'access'
@@ -114,10 +113,4 @@ class Settings(BaseSettings):
     redis_cache: RedisCache = RedisCache()
 
 settings = Settings()
-redis = Redis(
-    host=settings.redis_settings.host, 
-    port=settings.redis_settings.port,
-    db=settings.redis_settings.db
-)
-
 settings.db.give_url()

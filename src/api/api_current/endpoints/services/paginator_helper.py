@@ -1,7 +1,7 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import Depends
 
-from src.core.database.db_helper import db_helper
+from src.core.services.database.db_helper import db_helper
 from src.api.api_current.orm.db_orm import paginator, output_data
 from src.core.config import per_page
 

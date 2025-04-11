@@ -8,13 +8,13 @@ import logging
 from src.core.utils import get_list, get_select
 from src.api.api_current.orm.db_orm import select_data_tag
 from src.core.config import frontend_root
-from src.core.database.db_helper import db_helper
+from src.core.services.database.db_helper import db_helper
 from src.core.config import menu
 from src.core.urls import choice_from_menu
-from src.core.redis.books_cache import BookCacheService
+from src.core.services.cache.books_cache import BookCacheService
 from src.api.api_current.endpoints.services.paginator_helper import get_paginated_books
 from src.api.api_current.auth.config import securityAuthx
-from src.services.Pagination_text import split_text_into_pages
+from src.utils.Pagination_text import split_text_into_pages
 
 
 router = APIRouter()

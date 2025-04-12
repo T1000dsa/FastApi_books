@@ -3,7 +3,7 @@ import bcrypt
 from typing import Optional
 
 from src.core.services.database.models.base import Base, int_pk, created_at, updated_at
-from src.core.config import logger
+from src.core.config.config import logger
 
 
 class UserModel(Base):

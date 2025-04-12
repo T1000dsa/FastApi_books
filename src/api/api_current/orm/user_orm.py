@@ -5,6 +5,7 @@ import logging
 
 from src.api.api_current.auth.user_models import UserModel
 from src.api.api_current.auth.user_scheme import User as User_pydantic
+from src.core.config.config import settings
 
 
 logger = logging.getLogger(__name__)
@@ -23,8 +24,9 @@ async def select_data_user(
             query = select(UserModel).where(UserModel.id == data)
         else:
             raise ValueError(f"Unsupported data type: {type(data)}")
-
-        result = await session.execute(statement=query)
+        
+        logger.info(settings)
+        result = await session.execute(query)
         return result.scalar_one_or_none()
         
     except Exception as e:

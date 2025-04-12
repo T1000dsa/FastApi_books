@@ -96,6 +96,7 @@ class BookDownloader:
         base = f"https://archive.org/download/{identifier}/{identifier}"
         format_type = format_type.lower()
         
+        logger.info(f"{identifier} {format_type}")
         # Special cases first
         if format_type in self.special_formats:
             for ext in self.special_formats[format_type]:

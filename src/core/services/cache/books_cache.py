@@ -1,7 +1,7 @@
 import logging
 import gzip
 
-from src.core.config import settings
+from src.core.config.config import settings
 from src.core.services.cache.redis_fastapi import redis
 from src.core.services.database.models.models import BookModelOrm
 from src.utils.TextLoad import TextLoad

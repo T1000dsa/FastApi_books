@@ -5,11 +5,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from typing import Annotated
 import logging
 
-from src.core.utils import get_list, get_select
+from src.utils.db_utils import get_list, get_select
 from src.api.api_current.orm.db_orm import select_data_tag
-from src.core.config import frontend_root
+from src.core.config.config import frontend_root
 from src.core.services.database.db_helper import db_helper
-from src.core.config import menu
+from src.core.config.config import menu
 from src.core.urls import choice_from_menu
 from src.core.services.cache.books_cache import BookCacheService
 from src.api.api_current.endpoints.services.paginator_helper import get_paginated_books

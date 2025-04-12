@@ -8,7 +8,7 @@ import logging
 from authx.exceptions import JWTDecodeError
 import jwt
 
-from src.core.config import ACCESS_TYPE, REFRESH_TYPE
+from src.core.config.config import ACCESS_TYPE, REFRESH_TYPE
 from src.api.api_current.orm.user_orm import select_data_user
 from src.api.api_current.auth.config import securityAuthx
 from src.core.services.database.db_helper import db_helper

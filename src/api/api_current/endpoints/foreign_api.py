@@ -6,7 +6,7 @@ from typing import List, Dict, Optional
 import logging
 import asyncio
 
-from src.core.config import frontend_root
+from src.core.config.config import frontend_root
 from src.utils.BookDownloader import downloader
 
 

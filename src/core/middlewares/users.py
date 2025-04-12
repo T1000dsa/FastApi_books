@@ -6,7 +6,7 @@ import jwt
 
 from src.api.api_current.auth.utils import refresh_logic, clear_tokens_and_redirect
 
-from src.core.config import (ACCESS_TYPE, REFRESH_TYPE)
+from src.core.config.config import (ACCESS_TYPE, REFRESH_TYPE)
 from src.api.api_current.auth.config import securityAuthx
 
 

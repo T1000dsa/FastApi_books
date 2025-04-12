@@ -4,10 +4,10 @@ from sqlalchemy.orm import selectinload, joinedload
 from fastapi import  HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.core.config import logger
+from src.core.config.config import logger
 from src.core.services.database.models.models import BookModelOrm, TagsModelOrm, TagsOnBookOrm, Base
 from src.core.pydantic_schemas.schemas import BookModelPydantic, TagsModelPydantic
-from src.core.config import per_page
+from src.core.config.config import per_page
 
 
 async def insert_data(

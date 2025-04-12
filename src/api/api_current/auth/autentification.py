@@ -9,7 +9,7 @@ from src.api.api_current.auth.user_scheme import User
 from src.api.api_current.orm.user_orm import select_data_user, insert_data
 from src.core.services.database.db_helper import db_helper
 from src.api.api_current.auth.config import templates_users, securityAuthx
-from src.core.config import (ACCESS_TYPE, REFRESH_TYPE, menu)
+from src.core.config.config import (ACCESS_TYPE, REFRESH_TYPE, menu)
 from src.core.urls import choice_from_menu
 
 
@@ -67,6 +67,7 @@ async def register_check(
                 "menu_data":choice_from_menu
             }
         )
+    
     select_bool = await select_data_user(session, user)
     if select_bool == None:
         await insert_data(session, user)
@@ -164,26 +165,6 @@ async def logout():
     response = RedirectResponse(url="/login")
     response.delete_cookie(ACCESS_TYPE)
     response.delete_cookie(REFRESH_TYPE)
-    return response
-
-
-@router.post("/refresh")
-async def refresh_endpoint(
-    request: Request,
-    session: AsyncSession = Depends(db_helper.session_getter)
-):
-    new_token = None #await refresh_logic(request, session)
-    if not new_token:
-        raise HTTPException(status_code=401)
-    
-    response = Response(status_code=204)
-    response.set_cookie(
-            key=ACCESS_TYPE,
-            value=new_token,
-            httponly=True,  # Prevent client-side JavaScript from accessing the cookie
-            secure=True,     # Ensure the cookie is only sent over HTTPS
-            samesite="lax"   # Prevent CSRF attacks
-            )
     return response
 
 

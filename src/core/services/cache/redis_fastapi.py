@@ -1,6 +1,6 @@
 from redis.asyncio import Redis
 
-from src.core.config import settings
+from src.core.config.config import settings
 
 
 redis = Redis(

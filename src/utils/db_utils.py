@@ -5,7 +5,7 @@ from uuid import uuid4
 import os
 
 from src.api.api_current.orm.db_orm import (output_data, select_data_book)
-from src.core.config import max_file_size, media_root
+from src.core.config.config import max_file_size, media_root
 
 
 class Choice:

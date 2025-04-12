@@ -7,14 +7,14 @@ from fastapi import UploadFile, File, Form
 from typing import Annotated
 import logging
 
-from src.core.utils import get_list, book_process
+from src.utils.db_utils import get_list, book_process
 from src.api.api_current.orm.db_orm import ( drop_object, insert_data, update_data, select_data_tag, select_data_book)
 from src.core.pydantic_schemas.schemas import BookModelPydantic, TagsModelPydantic
 from src.utils.TextLoad import TextLoad
 from src.core.services.database.db_helper import db_helper
-from src.core.config import frontend_root
+from src.core.config.config import frontend_root
 from src.api.api_current.auth.config import securityAuthx
-from src.core.config import menu
+from src.core.config.config import menu
 from src.core.urls import choice_from_menu
 from src.api.api_current.endpoints.services.paginator_helper import get_paginated_books
 

@@ -29,13 +29,17 @@ async def insert_data(
             await session.commit()
 
         elif type(data) == TagsModelPydantic:
+            logger.debug('in TagsModelPydantic')
             res = TagsModelPydantic.model_validate(data, from_attributes=True)
             stm = select(BookModelOrm).where(BookModelOrm.id.in_(res.books))
-            tag_objs = await session.execute(stm)
+            logger.debug('in TagsModelPydantic 1')
+            book_objs = (await session.execute(stm)).scalars().all()
+            logger.debug(f'in TagsModelPydantic 2 {book_objs}')
             session.add(TagsModelOrm(
                     tag=res.tag,
-                    book_tags=tag_objs.scalars().all()
+                    book_tags=book_objs
                     ))
+            logger.debug('in TagsModelPydantic 3')
             await session.commit()
     except IntegrityError as err:
         raise err

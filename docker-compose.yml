@@ -49,6 +49,7 @@ services:
     command: bash -c "alembic upgrade head && uvicorn src.core.main:app --host 0.0.0.0 --port 8000 --reload"
     volumes:
       - .:/app
+      - media-data:/app/src/media_root  # Add this line
     ports:
       - 8000:8000
     restart: always
@@ -59,3 +60,4 @@ services:
 
 volumes:
   db-data:
+  media-data:  # Add this volume definition

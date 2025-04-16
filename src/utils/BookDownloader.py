@@ -1,200 +1,138 @@
-from aiohttp import ClientSession, BasicAuth, ClientTimeout
-from typing import List, Dict, Optional, Generator
+from aiohttp import ClientSession
+from fastapi import HTTPException
+from bs4 import BeautifulSoup
 import logging
-import re
 import asyncio
-import time
+from typing import List, Dict, Optional
 
 logger = logging.getLogger(__name__)
 
-class BookDownloader:
-    def __init__(self, username: str = None, password: str = None):
-        self.auth = BasicAuth(username, password) if username and password else None
-        self.format_priority = ['txt', 'pdf', 'epub', 'Text PDF', 'JSON', 'chOCR', 'XML', 'djvu', 'hocr', 'ocr', 'xml']
-        self.session = None  # We'll maintain a single session
-        self.timeout = ClientTimeout(total=30)
-        self.default_language = 'eng'
-        self.lock_patterns = re.compile(r'lock|restricted|copyright|protected', re.IGNORECASE)
-        self.encrypted_formats = re.compile(r'encrypted|acs|lcp', re.IGNORECASE)
-        self.special_formats = {
-            'txt': ['.txt', '_text.txt', '_djvu.txt', '_ocr.txt', '_hocr_searchtext.txt.gz'],
-            'pdf': ['.pdf', '_text.pdf', '_encrypted.pdf', '_lcpdf'],
-            'epub': ['.epub', '_lcp.epub'],
-            'djvu': ['.djvu', '_text.djvu', '_djvu.xml'],
-            'hocr': ['_hocr.html'],
-            'chocr': ['_chocr.html.gz'],
-            'ocr': ['_ocr.txt'],
-            'xml': ['.xml', '_dc.xml', '_marc.xml', '_meta.xml', '_scandata.xml', '_files.xml'],
-            'json': ['.json', '_page_numbers.json', '_events.json', '_hocr_pageindex.json.gz'],
-            'text pdf': ['_text.pdf']
+class BookLoader:
+    def __init__(self, title: Optional[str] = None, author: Optional[str] = None, 
+                 limit: int = 10):
+        self.title = title
+        self.author = author
+        self.limit = limit
+
+        self.params = {
+            'query': self.title or '',
+            'submit_search': 'Search'
         }
 
-    async def __aenter__(self):
-        self.session = ClientSession(timeout=self.timeout)
-        if self.auth:
-            await self.login()
-        return self
+        self.base_urls = {
+            'search': "https://www.gutenberg.org/ebooks/search/",
+            'files': "https://www.gutenberg.org/files/{book_id}/",
+            'ebooks': "https://www.gutenberg.org/ebooks/{book_id}"
+        }
 
-    async def __aexit__(self, exc_type, exc_val, exc_tb):
-        if self.session:
-            await self.session.close()
+        self.file_patterns = [
+            "{book_id}-0.txt",  # Most common
+            "{book_id}.txt",
+            "{book_id}-8.txt",  # Alternative numbering
+            "{book_id}.txt.utf-8"
+        ]
 
-    async def login(self):
-        """Proper login implementation with cookie handling"""
-        if not self.auth:
-            return False
+    async def search_books(self) -> List[Dict]:
+        """Search for books and return metadata"""
+        async with ClientSession() as session:
+            async with session.get(
+                self.base_urls['search'], 
+                params=self.params
+            ) as response:
+                if response.status != 200:
+                    raise HTTPException(
+                        status_code=response.status,
+                        detail="Failed to fetch books from Gutenberg"
+                    )
+                
+                html = await response.text()
+                return await self._parse_search_results(html)
+
+    async def _parse_search_results(self, html: str) -> List[Dict]:
+        """Parse HTML search results into book metadata"""
+        soup = BeautifulSoup(html, 'html.parser')
+        books = []
+        
+        for result in soup.select('li.booklink'):
+            title_elem = result.select_one('.title')
+            author_elem = result.select_one('.subtitle')
+            link_elem = result.find('a')
+
+            await asyncio.sleep(0.5)
             
-        login_url = "https://archive.org/account/login"
-        data = {
-            "username": self.auth.login,
-            "password": self.auth.password,
-            "remember": "true",
-            "action": "login",
-            "submit": "Log in"
-        }
-        
-        try:
-            logger.debug(f'{login_url} {data}')
-            async with self.session.post(login_url, data=data) as resp:
-                if resp.status == 200:
-                    # Verify login by checking cookies
-                    cookies = resp.cookies
-                    if 'logged-in-user' in cookies:
-                        logger.info("Successfully logged in to archive.org")
-                        return True
-                logger.warning(f"Login failed with status {resp.status}")
-                return False
-        except Exception as e:
-            logger.error(f"Login error: {str(e)}")
-            return False
-
-    async def check_url(self, url_info: tuple) -> tuple:
-        """Check a single URL with proper session handling"""
-        url, fmt = url_info
-        try:
-            async with self.session.head(url, allow_redirects=True) as resp:
-                # Handle special cases
-                if resp.status == 403:
-                    # Try with GET if HEAD fails
-                    async with self.session.get(url, allow_redirects=True) as get_resp:
-                        return (url, fmt) if get_resp.status == 200 else (None, None)
-                elif resp.status == 401:
-                    # Check if this is an encrypted resource we could access if logged in
-                    if self.auth and self.encrypted_formats.search(fmt):
-                        return (url, fmt)
-                    return (None, None)
-                return (url, fmt) if resp.status == 200 else (None, None)
-        except Exception as e:
-            logger.debug(f"Failed to access {url}: {str(e)}")
-            return (None, None)
-
-    async def fetch_books(self, item: Dict) -> Dict:
-        """Fetch and process books using the internal session"""
-        try:
-            query_parts = [
-                'mediatype:texts',
-                f'title:"{item.get("title")}"',
-                f'language:{item.get("language", self.default_language)}'
-            ]
+            if not all([title_elem, link_elem]):
+                continue
+                
+            book_id = link_elem['href'].split('/')[-1]
+            books.append({
+                'id': book_id,
+                'title': title_elem.text.strip(),
+                'author': author_elem.text.strip() if author_elem else "Unknown",
+                'formats': self._get_available_formats(book_id)
+            })
             
-            if author := item.get("author"):
-                query_parts.append(f'creator:"{author}"')
-
-            params = {
-                "q": ' AND '.join(query_parts),
-                "output": "json",
-                "rows": 50,
-                "fl[]": ["title", "creator", "identifier", "downloads", "format", "language", "year"]
-            }
-
-            async with self.session.get(
-                'https://archive.org/advancedsearch.php',
-                params=params,
-                timeout=self.timeout
-            ) as resp:
-                if resp.status != 200:
-                    return {"error": f"API error {resp.status}", "item": item}
+            if len(books) >= self.limit:
+                break
                 
-                data = await resp.json()
-                books = data.get('response', {}).get('docs', [])
-                
-                if not books:
-                    return {"status": "not_found", "item": item}
-                
-                # Process books using internal session
-                processed_books = await self.process_books_parallel(books, item)
-                return processed_books
+        return books
 
-        except Exception as e:
-            logger.error(f"Error fetching books: {e}")
-            return {"error": str(e), "item": item}
+    def _get_available_formats(self, book_id: str) -> List[str]:
+        """Generate available format URLs for a book"""
+        return [
+            f"{self.base_urls['files'].format(book_id=book_id)}{pattern.format(book_id=book_id)}"
+            for pattern in self.file_patterns
+        ]
 
-    async def process_books_parallel(self, books: List[Dict], original_item: Dict) -> Dict:
-        """Process books in parallel using internal session"""
-        tasks = []
-        for book in books:
-            if self.is_downloadable(book):
-                tasks.append(self.process_single_book(book))
+    async def download_book(self, book_id: str, format: str = 'text') -> Optional[bytes]:
+        """Download a book in the specified format"""
+        if format == 'text':
+            return await self._download_text(book_id)
+        elif format == 'epub':
+            return await self._download_epub(book_id)
+        else:
+            raise HTTPException(
+                status_code=400, 
+                detail="Unsupported format. Use 'text' or 'epub'"
+            )
+
+    async def _download_text(self, book_id: str) -> Optional[bytes]:
+        """Try downloading text version using known patterns"""
+        async with ClientSession() as session:
+            for pattern in self.file_patterns:
+                url = f"{self.base_urls['files'].format(book_id=book_id)}{pattern.format(book_id=book_id)}"
+                async with session.get(url) as response:
+                    if response.status == 200:
+                        return await response.read()
         
-        results = await asyncio.gather(*tasks, return_exceptions=True)
-        filtered = [result for result in results if result and isinstance(result, dict) and result.get('download_url')]
-        
-        # Deduplicate and sort
-        deduplicated = self.deduplicate_books(filtered)
-        return {
-            "status": "success",
-            "original_query": original_item,
-            "books": sorted(deduplicated, key=lambda x: int(x.get('downloads', 0)), reverse=True),
-            "format_priority": self.format_priority
-        }
+        # Fallback to HTML if no text version found
+        return await self._download_html(book_id)
 
-    async def process_single_book(self, book: Dict) -> Optional[Dict]:
-        """Process a single book using internal session"""
-        best_formats = list(self.select_best_format(book.get('format', [])))
-        if not best_formats:
-            return None
-
-        verified_url = await self.find_working_url(book['identifier'], best_formats)
-        if verified_url[0]:
-            book['download_url'] = verified_url[0]
-            book['chosen_format'] = verified_url[1]
-            return book
+    async def _download_epub(self, book_id: str) -> Optional[bytes]:
+        """Download EPUB version"""
+        url = f"{self.base_urls['ebooks'].format(book_id=book_id)}.epub.noimages"
+        async with ClientSession() as session:
+            async with session.get(url) as response:
+                if response.status == 200:
+                    return await response.read()
         return None
 
-    async def find_working_url(self, identifier: str, format_types: list) -> tuple:
-        """Find working URL using internal session"""
-        base = f"https://archive.org/download/{identifier}/{identifier}"
-        urls_to_check = []
-        
-        for fmt in format_types:
-            fmt = fmt.lower()
-            if fmt in self.special_formats:
-                for ext in self.special_formats[fmt]:
-                    urls_to_check.append((f"{base}{ext}", fmt))
-            else:
-                urls_to_check.append((f"{base}.{fmt}", fmt))
+    async def _download_html(self, book_id: str) -> Optional[bytes]:
+        """Download HTML version as fallback"""
+        url = f"{self.base_urls['ebooks'].format(book_id=book_id)}.html.images"
+        async with ClientSession() as session:
+            async with session.get(url) as response:
+                if response.status == 200:
+                    return await response.read()
+        return None
 
-        # Check URLs in parallel using internal session
-        tasks = [self.check_url(url) for url in urls_to_check]
-        results = await asyncio.gather(*tasks)
-        
-        for result in results:
-            if result[0]:  # If URL is valid
-                return result
-        return (None, None)
-    
-    def is_downloadable(self, book: Dict) -> bool:
-        """More lenient downloadable check"""
-        identifier = book.get('identifier', '')
-        formats = book.get('format', [])
-        
-        # Skip obviously restricted items
-        if any(f.lower() in ['restricted', 'lending'] for f in formats):
-            return False
-            
-        # Skip items with no formats
-        if not formats:
-            return False
-            
-        return True
-    
+    async def provide_books(self) -> List[Dict]:
+        """Main method to search and get book metadata"""
+        try:
+            books = await self.search_books()
+            return books[:self.limit]
+        except Exception as e:
+            logger.error(f"Error fetching books: {str(e)}")
+            raise HTTPException(
+                status_code=500,
+                detail="Failed to fetch books"
+            )

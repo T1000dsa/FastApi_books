@@ -25,7 +25,6 @@ async def select_data_user(
         else:
             raise ValueError(f"Unsupported data type: {type(data)}")
         
-        logger.info(settings)
         result = await session.execute(query)
         return result.scalar_one_or_none()
         

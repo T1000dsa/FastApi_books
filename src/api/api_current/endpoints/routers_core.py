@@ -1,10 +1,11 @@
 from fastapi import APIRouter, Depends, Request, HTTPException, status
 from fastapi.responses import JSONResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy.exc import IntegrityError, DBAPIError
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import UploadFile, File, Form
 from typing import Annotated
+from datetime import datetime
 import logging
 
 from src.utils.db_utils import get_list, book_process
@@ -97,12 +98,12 @@ async def render_form_book(
 
 @router.post("/add_book")
 async def postdata_book(
-    session:Annotated[AsyncSession, Depends(db_helper.session_getter)],
     title=Form(), 
     author=Form(),
     text_hook:UploadFile=File(),
-    year=File(),
-    tags:list[str]=Form(default=[])
+    tags:list[str]=Form(default=[]),
+    year:datetime = Form(default=datetime(1900, 1, 1)),
+    session:AsyncSession = Depends(db_helper.session_getter)
         ):
 
     local = await book_process(text_hook)
@@ -117,9 +118,28 @@ async def postdata_book(
         "menu_data":choice_from_menu
         }
     try:
+        select_data = await select_data_book(session=session, data=title)
+        if select_data:
+            raise IntegrityError
+        
         await insert_data(session, BookModelPydantic(**insert_input))
+
     except IntegrityError as err:
         return HTTPException(status_code=400, detail='Book with such title already exists')
+    
+    except DBAPIError as e:
+        await session.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Database operation failed: {str(e.orig)}"
+        )
+    
+    except Exception as e:
+        await session.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Database error: {str(e)}"
+        )
 
 
     return JSONResponse({
@@ -275,5 +295,5 @@ async def delete_book_id(
     session:Annotated[AsyncSession, Depends(db_helper.session_getter)],
     book_id:int):
 
-    await drop_db_data_book(session, book_id)
+    await drop_db_data_book_id(session, book_id)
     return RedirectResponse(f"/", status_code=303)

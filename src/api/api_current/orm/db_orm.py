@@ -8,6 +8,7 @@ from src.core.config.config import logger
 from src.core.services.database.models.models import BookModelOrm, TagsModelOrm, TagsOnBookOrm, Base
 from src.core.pydantic_schemas.schemas import BookModelPydantic, TagsModelPydantic
 from src.core.config.config import per_page
+from src.core.services.database.db_helper import db_helper
 
 
 async def insert_data(
@@ -29,17 +30,13 @@ async def insert_data(
             await session.commit()
 
         elif type(data) == TagsModelPydantic:
-            logger.debug('in TagsModelPydantic')
             res = TagsModelPydantic.model_validate(data, from_attributes=True)
             stm = select(BookModelOrm).where(BookModelOrm.id.in_(res.books))
-            logger.debug('in TagsModelPydantic 1')
             book_objs = (await session.execute(stm)).scalars().all()
-            logger.debug(f'in TagsModelPydantic 2 {book_objs}')
             session.add(TagsModelOrm(
                     tag=res.tag,
                     book_tags=book_objs
                     ))
-            logger.debug('in TagsModelPydantic 3')
             await session.commit()
     except IntegrityError as err:
         raise err
@@ -140,10 +137,14 @@ async def drop_object(
                     )
             await session.execute(statement)
 
-        await session.commit()
-
     if drop_id is None and data is not None:
-        await session.run_sync(Base.metadata.drop_all())
+        statement = (
+                        delete(BookModelOrm)
+
+        )
+        await session.execute(statement)
+
+    await session.commit()
 
     #if drop_id is None and data is None:
     #    async with async_engine.begin() as conn:

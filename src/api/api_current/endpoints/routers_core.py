@@ -100,56 +100,56 @@ async def render_form_book(
 async def postdata_book(
     title=Form(), 
     author=Form(),
-    text_hook:UploadFile=File(),
-    tags:list[str]=Form(default=[]),
-    year:datetime = Form(default=datetime(1900, 1, 1)),
-    session:AsyncSession = Depends(db_helper.session_getter)
-        ):
-
+    text_hook: UploadFile = File(),
+    tags: list[str] = Form(default=[]),
+    year: datetime = Form(default=datetime(1900, 1, 1)),
+    session: AsyncSession = Depends(db_helper.session_getter)
+):
     local = await book_process(text_hook)
     result = [i.id for i in await select_data_tag(session, tags)]
 
     insert_input = {
         "title": title, 
         "author": author,
-        "text_hook":local,
-        'year':year,
-        "tags":result,
-        "menu_data":choice_from_menu
-        }
+        "text_hook": local,
+        'year': year,
+        "tags": result,
+        "menu_data": choice_from_menu
+    }
+    
     try:
         select_data = await select_data_book(session=session, data=title)
         if select_data:
-            raise IntegrityError
+            raise HTTPException(status_code=400, detail='Book with such title already exists')
         
         await insert_data(session, BookModelPydantic(**insert_input))
-
-    except IntegrityError as err:
-        return HTTPException(status_code=400, detail='Book with such title already exists')
-    
-    except DBAPIError as e:
+        
+    except IntegrityError:
         await session.rollback()
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Database operation failed: {str(e.orig)}"
+            status_code=400,
+            detail='Book with such title already exists'
         )
     
     except Exception as e:
         await session.rollback()
+        # Handle all other exceptions, including DBAPIError
+        error_detail = str(e)
+        if hasattr(e, 'orig'):
+            error_detail = str(e.orig)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Database error: {str(e)}"
+            detail=f"Database error: {error_detail}"
         )
 
-
     return JSONResponse({
-            "status": "success",
-            "message": "Book added successfully",
-            "data": {
-                "title": title,
-                "tags": tags
-            }
-        }, status_code=status.HTTP_201_CREATED)
+        "status": "success",
+        "message": "Book added successfully",
+        "data": {
+            "title": title,
+            "tags": tags
+        }
+    }, status_code=status.HTTP_201_CREATED)
 
 @router.get("/add_tag", tags=['render'], dependencies=[Depends(securityAuthx.access_token_required)])
 async def render_form_tag(request: Request):
@@ -191,10 +191,6 @@ async def postdata_tag(
     )
 
 
-@router.delete('/delete', tags=['init'])
-async def delete_all(session:Annotated[AsyncSession, Depends(db_helper.session_getter)]):
-    await drop_object(session)
-    return {'msg':'Data was deleted'}
 
 @router.post('/edit_book/{book_id}')
 async def update_book_render(

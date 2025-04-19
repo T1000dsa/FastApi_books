@@ -3,8 +3,8 @@ from sqlalchemy import select, update, delete, join
 from typing import Union, Optional
 import logging
 
-from src.api.api_current.auth.user_models import UserModel
-from src.api.api_current.auth.user_scheme import User as User_pydantic
+from src.core.services.database.models.user_models import UserModel
+from src.core.pydantic_schemas.user_scheme import User as User_pydantic
 from src.core.config.config import settings
 
 

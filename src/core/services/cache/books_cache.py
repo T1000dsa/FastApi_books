@@ -13,19 +13,22 @@ class BookCacheService:
     @staticmethod
     async def get_book_text(book_data: BookModelOrm) -> str:
         """Retrieve book text from cache or source, with compression handling."""
-        cached_text = await redis.get(book_data.text_hook)
-        logger.info(f'Cache {"hit" if cached_text else "miss"} for book {book_data.id}')
+        cached_text = None
+        if book_data:
+            cached_text = await redis.get(book_data.text_hook)
+            logger.info(f'Cache {"hit" if cached_text else "miss"} for book {book_data.id}')
 
-        if cached_text:
-            try:
-                return gzip.decompress(cached_text).decode()
-            except gzip.BadGzipFile:
-                return cached_text.decode()
-        
-        text_load = TextLoad(book_data)
-        content = text_load.push_text()
-        await BookCacheService._cache_book_text(book_data.text_hook, content)
-        return content
+            if cached_text:
+                try:
+                    return gzip.decompress(cached_text).decode()
+                except gzip.BadGzipFile:
+                    return cached_text.decode()
+            
+            text_load = TextLoad(book_data)
+            content = text_load.push_text()
+            await BookCacheService._cache_book_text(book_data.text_hook, content)
+            return content
+        return 'No text'
 
     @staticmethod
     async def _cache_book_text(key: str, content: str) -> None:

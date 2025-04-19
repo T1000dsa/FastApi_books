@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from typing import Annotated, Optional
 import logging
 
-from src.api.api_current.auth.user_scheme import User
+from src.core.pydantic_schemas.user_scheme import User
 from src.api.api_current.orm.user_orm import select_data_user, insert_data
 from src.core.services.database.db_helper import db_helper
 from src.api.api_current.auth.config import templates_users, securityAuthx

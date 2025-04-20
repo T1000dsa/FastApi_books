@@ -7,64 +7,49 @@ on:
     branches: [ main ]
 
 env:
-  DOCKER_IMAGE: your-dockerhub-username/fastapi-app
+  # Load from .env or GitHub secrets
+  DOCKER_IMAGE: fastapi-container/fastapi-app
   DB_IMAGE: postgres:13
   REDIS_IMAGE: redis:6
 
 jobs:
   test:
     runs-on: ubuntu-latest
+    env:
+      # Mirror your .env file variables
+      FAST__DB__USER: ${{ vars.FAST__DB_USER || secrets.FAST__DB_USER || 'test_user' }}
+      FAST__DB__PASSWORD: ${{ vars.FAST__DB_PASSWORD || secrets.FAST__DB_PASSWORD || 'test_password' }}
+      FAST__DB__NAME: ${{ vars.FAST__DB_NAME || secrets.FAST__DB_NAME || 'test_db' }}
+      FAST__DB__HOST: localhost
+      FAST__DB__PORT: 5432
+      
     services:
       postgres:
-        image: postgres:13
+        image: ${{ env.DB_IMAGE }}
         env:
-          POSTGRES_USER: test_user
-          POSTGRES_PASSWORD: test_password
-          POSTGRES_DB: test_db
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
+          POSTGRES_USER: ${{ env.FAST__DB__USER }}
+          POSTGRES_PASSWORD: ${{ env.FAST__DB__PASSWORD }}
+          POSTGRES_DB: ${{ env.FAST__DB__NAME }}
+        # ... rest of postgres config
+
       redis:
-        image: redis:6
-        ports:
-          - 6379:6379
-        options: >-
-          --health-cmd "redis-cli ping"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 3
+        image: ${{ env.REDIS_IMAGE }}
+        # ... rest of redis config
 
     steps:
     - uses: actions/checkout@v4
     
-    - name: Set up Python
-      uses: actions/setup-python@v4
+    # Add step to load .env file if it exists
+    - name: Load environment variables
+      uses: falti/load-env-vars@v1
       with:
-        python-version: '3.11'
+        envFile: .env
     
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
-        pip install pytest pytest-cov
-        
+    # ... rest of your steps
     - name: Run tests
-      env:
-        FAST__DB__USER: test_user
-        FAST__DB__PASSWORD: test_password
-        FAST__DB__NAME: test_db
-        FAST__DB__HOST: localhost
-        FAST__DB__PORT: 5432
       run: |
         pytest --cov=./ --cov-report=xml
         
-    - name: Upload coverage
-      uses: codecov/codecov-action@v3
-
   build-and-deploy:
     needs: test
     runs-on: ubuntu-latest

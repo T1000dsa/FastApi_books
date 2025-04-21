@@ -1,15 +1,13 @@
 from celery import Celery
-
 from src.core.config.config import settings
-
 
 celery_app = Celery(
     "worker",
     broker=f"redis://{settings.redis_settings.host}:{settings.redis_settings.port}/{settings.redis_settings.db}",
-    backend=f"redis://{settings.redis_settings.host}:{settings.redis_settings.port}/{settings.redis_settings.db}"
+    backend=f"redis://{settings.redis_settings.host}:{settings.redis_settings.port}/{settings.redis_settings.db}",
+    include=["src.core.services.task_queue.tasks"]
 )
 
-# Configure Celery with additional settings
 celery_app.conf.update(
     task_track_started=True,
     task_serializer='json',
@@ -17,10 +15,15 @@ celery_app.conf.update(
     accept_content=['json'],
     timezone='UTC',
     enable_utc=True,
-    # Use the same Redis settings for result backend
-    result_backend=f"redis://{settings.redis_settings.host}:{settings.redis_settings.port}/{settings.redis_settings.db}",
-    # Optional: Configure task routes if needed
+    broker_connection_retry_on_startup=True,
+    task_ignore_result=False,
     task_routes={
-        "app.tasks.*": {"queue": "main-queue"}
+        "src.core.services.task_queue.tasks.*": {"queue": "main-queue"}
+    },
+    beat_schedule={
+        'cleanup-expired-tokens': {
+            'task': 'src.core.services.task_queue.tasks.cleanup_expired_tokens',
+            'schedule': 3600.0,  # Every hour
+        },
     }
 )

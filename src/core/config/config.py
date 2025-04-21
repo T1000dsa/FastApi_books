@@ -28,7 +28,6 @@ REFRESH_TYPE = 'refresh'
 
 access_token_expire:int = 20 # minutes 
 refresh_token_expire:int = 60*24*7 # minutes 
-#refresh_time:int = 19 # refresh each 15 minutes 20 - 5 = 15
 per_page:int = 10
 
 menu = menu_items

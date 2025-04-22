@@ -40,10 +40,10 @@ from src.api.api_current.auth.config import securityAuthx
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    print(settings.db.url)
+    print(settings)
 
     yield
-    
+
     try:
         await db_helper.dispose()
         logger.debug("✅ Connection pool closed cleanly")
@@ -64,7 +64,7 @@ app.include_router(foreign_router)
 if __name__ == '__main__':
     uvicorn.run(
         'main:app',
-        host='0.0.0.0',
-        port=8000,
+        host=settings.run.host,
+        port=settings.run.port,
         reload=True
         )

@@ -1,16 +1,22 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr
 from datetime import timedelta
+
+
+class Email_Settings(BaseModel):
+    # Email Configuration
+    EMAIL_ENABLED: bool = False
+    EMAIL_HOST: str = "smtp.gmail.com"
+    EMAIL_PORT: int = 587
+    EMAIL_USERNAME: str = ""
+    EMAIL_PASSWORD: str = 'vlup lvmh rdmy jmwf'
+    EMAIL_FROM: EmailStr = ""
+    EMAIL_USE_TLS: bool = True
+    EMAIL_TIMEOUT: int = 10
 
 
 class RunConfig(BaseModel):
     host: str = "127.0.0.1"
     port:int=8000
-
-
-# demonstation
-class ApiPrefix_V2(BaseModel):
-    prefix:str='/v2'
-    users:str='/users'
 
 
 class ApiPrefix_V1(BaseModel):

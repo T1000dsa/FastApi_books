@@ -5,7 +5,17 @@ import logging
 import os
     
 from src.core.urls import menu_items
-from src.core.config.models import RunConfig, Current_ApiPrefix, Mode, DatabaseConfig, Jwt, RedisSettings, RedisCache, ElasticSearch
+from src.core.config.models import (
+    RunConfig, 
+    Current_ApiPrefix,
+    Mode, 
+    DatabaseConfig, 
+    Jwt, 
+    RedisSettings, 
+    RedisCache, 
+    ElasticSearch, 
+    Email_Settings
+    )
 
 
 logger = logging.getLogger(__name__)
@@ -51,6 +61,8 @@ class Settings(BaseSettings):
     redis_settings: RedisSettings = RedisSettings()
     redis_cache: RedisCache = RedisCache()
     elastic:ElasticSearch = ElasticSearch()
+    email:Email_Settings = Email_Settings()
 
 settings = Settings()
 settings.db.give_url()
+assert settings.mode.mode == 'DEV'

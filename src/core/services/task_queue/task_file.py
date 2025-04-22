@@ -3,6 +3,7 @@ from email.mime.text import MIMEText
 from datetime import datetime, timedelta
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
+import asyncio
 
 from src.core.services.task_queue.celery_fastapi import celery_app
 from src.core.config.config import settings
@@ -11,11 +12,10 @@ from src.core.services.database.models.models import BookModelOrm
 from src.core.services.database.db_helper import db_helper
 from src.core.services.cache.redis_fastapi import redis
 
+
 # Helper function to run async DB operations in sync context
 def async_to_sync_db_operation(async_func):
     """Run async DB operations in Celery's sync context"""
-    from asgiref.sync import sync_to_async
-    import asyncio
     
     async def wrapper(*args, **kwargs):
         async with db_helper.session_getter() as session:
@@ -36,19 +36,19 @@ def send_email_notification(self, user_id: int, subject: str, message: str):
         # Email sending (synchronous)
         msg = MIMEText(message)
         msg['Subject'] = subject
-        msg['From'] = settings.email_settings.sender
+        msg['From'] = settings.email.EMAIL_FROM
         msg['To'] = user_email
         
         with smtplib.SMTP(
-            host=settings.email_settings.host,
-            port=settings.email_settings.port
+            host=settings.email.EMAIL_HOST,
+            port=settings.email.EMAIL_PORT
         ) as server:
-            if settings.email_settings.use_tls:
+            if settings.email.EMAIL_USE_TLS:
                 server.starttls()
-            if settings.email_settings.username:
+            if settings.email.EMAIL_USERNAME:
                 server.login(
-                    settings.email_settings.username,
-                    settings.email_settings.password
+                    settings.email.EMAIL_USERNAME,
+                    settings.email.EMAIL_PASSWORD
                 )
             server.send_message(msg)
             

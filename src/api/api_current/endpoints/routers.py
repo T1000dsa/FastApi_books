@@ -15,6 +15,8 @@ from src.core.services.cache.books_cache import BookCacheService
 from src.api.api_current.endpoints.services.paginator_helper import get_paginated_books
 from src.api.api_current.auth.config import securityAuthx
 from src.utils.Pagination_text import split_text_into_pages
+from src.core.services.task_queue.emal_queue import send_email_task
+from src.utils.User_data import gather_user_data_from_cookies
 
 
 router = APIRouter()
@@ -101,6 +103,18 @@ async def get_book(
 
     # Get tags
     res = await select_data_tag(session, book_data)
+
+    user_data = await gather_user_data_from_cookies(request=request)
+
+    try:
+
+        await send_email_task(
+            to_email='',
+            subject=user_data.sub,  # Assuming you have user auth
+            body=book_title
+        )
+    except(Exception) as err:
+        logger.debug(err)
     
     return templates.TemplateResponse(
         "get_book.html",

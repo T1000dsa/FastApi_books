@@ -46,7 +46,7 @@ services:
       - POSTGRES_PASSWORD=${FAST__DB__PASSWORD}
       - POSTGRES_DB=${FAST__DB__NAME}
     container_name: app
-    command: bash -c "alembic upgrade head && uvicorn src.core.main:app --host 0.0.0.0 --port 8000 --reload"
+    command: bash -c "alembic upgrade head && uvicorn main:app --host 0.0.0.0 --port 8000 --reload"
     volumes:
       - .:/app
       - media-data:/app/src/media_root  # Add this line

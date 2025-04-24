@@ -109,7 +109,7 @@ async def get_book(
     try:
 
         await send_email_task(
-            to_email='',
+            to_email='hasanovmarsel26@gmail.com',
             subject=user_data.sub,  # Assuming you have user auth
             body=book_title
         )

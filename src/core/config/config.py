@@ -4,7 +4,7 @@ from pathlib import Path
 import logging
 import os
     
-from src.core.urls import menu_items
+from src.core.menu.urls import menu_items
 from src.core.config.models import (
     RunConfig, 
     Current_ApiPrefix,

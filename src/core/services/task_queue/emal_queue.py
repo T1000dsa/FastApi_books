@@ -17,7 +17,7 @@ async def send_email_task(self, to_email: str, subject: str, body: str, html_bod
         return False
     
     try:
-        success = EmailService.send_email(
+        success = await EmailService.send_email(
             to_email=to_email.strip(),
             subject=subject,
             body=body,

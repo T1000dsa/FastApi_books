@@ -10,7 +10,7 @@ from src.api.api_current.orm.user_orm import select_data_user, insert_data
 from src.core.services.database.db_helper import db_helper
 from src.api.api_current.auth.config import templates_users, securityAuthx
 from src.core.config.config import (ACCESS_TYPE, REFRESH_TYPE, menu)
-from src.core.urls import choice_from_menu
+from src.core.menu.urls import choice_from_menu
 
 
 router = APIRouter(tags=['auth'])

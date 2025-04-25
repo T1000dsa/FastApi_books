@@ -16,7 +16,7 @@ from src.core.services.database.db_helper import db_helper
 from src.core.config.config import frontend_root
 from src.api.api_current.auth.config import securityAuthx
 from src.core.config.config import menu
-from src.core.urls import choice_from_menu
+from src.core.menu.urls import choice_from_menu
 from src.api.api_current.endpoints.services.paginator_helper import get_paginated_books
 
 

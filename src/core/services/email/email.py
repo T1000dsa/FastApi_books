@@ -9,13 +9,13 @@ logger = logging.getLogger(__name__)
 
 class EmailService:
     @staticmethod
-    def _create_secure_context() -> ssl.SSLContext:
+    async def _create_secure_context() -> ssl.SSLContext:
         context = ssl.create_default_context()
         context.minimum_version = ssl.TLSVersion.TLSv1_2
         return context
 
     @classmethod
-    def send_email(
+    async def send_email(
         cls,
         to_email: str,
         subject: str,
@@ -46,7 +46,7 @@ class EmailService:
             # Verify message before sending
             logger.debug(f"Prepared email message:\nFrom: {msg['From']}\nTo: {msg['To']}\nSubject: {msg['Subject']}")
 
-            context = cls._create_secure_context()
+            context = await cls._create_secure_context()
 
             with smtplib.SMTP(
                 settings.email.EMAIL_HOST,

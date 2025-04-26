@@ -15,7 +15,7 @@
 # TODO4 Cache [1, 1, 1, 1, 1] Redis
 # TODOEXTRA Auto-Testing [0, 0, 0, 0, 1]
 # TODOEXTRA Make automatic books download [1, 1, 1, 1, 1]
-# TODO5 Celery [0, 0, 0, 0, 1]
+# TODO5 Celery [0, 0, 1, 1, 1]
 # TODO6 Rabbidmq or Kafka [0, 0, 0, 0, 1]
 # TODO7 search engine [0, 0, 0, 0, 0]
 # TODO8 Mupltiply languages supporting [0, 0, 0, 0, 0]
